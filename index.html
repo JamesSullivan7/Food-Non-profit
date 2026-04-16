@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tulsa Food Pantry & Meal Program Directory</title>
+
+  <!-- Open Graph for link previews -->
+  <meta property="og:title" content="Tulsa Food Pantry & Meal Program Directory" />
+  <meta property="og:description" content="Interactive map and directory of 47 food pantries, meal programs, and delivery services across the Tulsa metro area." />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="description" content="Interactive map and directory of 47 food pantries, meal programs, and delivery services across the Tulsa metro area. Filter by neighborhood, service type, and eligibility." />
+
+  <!-- Favicon: teal fork+knife -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍴</text></svg>" />
+
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    :root { --bg:#f7f8fa; --card:#ffffff; --text:#1f2937; --muted:#6b7280; --line:#d1d5db; --accent:#0f766e; --accent-light:#14b8a6; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+
+    header { padding:28px 24px; background:linear-gradient(135deg,#0f766e,#155e75); color:white; }
+    header h1 { margin:0 0 8px; font-size:clamp(1.7rem,3.2vw,2.5rem); letter-spacing:-0.02em; }
+    header p { margin:4px 0; max-width:1100px; line-height:1.5; opacity:.92; }
+
+    .wrap { max-width:1400px; margin:0 auto; padding:20px; }
+    .grid { display:grid; grid-template-columns: 360px 1fr; gap:18px; align-items:start; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 8px 24px rgba(15,23,42,.05); transition: box-shadow .2s; }
+    .panel { padding:16px; }
+
+    /* Filters */
+    .filters label { display:block; font-size:.85rem; color:var(--muted); margin-bottom:5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+    .filters input, .filters select { width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line); margin-bottom:14px; font-size:.95rem; transition: border-color .15s, box-shadow .15s; outline:none; }
+    .filters input:focus, .filters select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(15,118,110,.12); }
+
+    /* Stats */
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+    .stat { background:#f0fdfa; border:1px solid #99f6e4; border-radius:14px; padding:12px; text-align:center; transition: transform .15s; }
+    .stat:hover { transform:translateY(-2px); }
+    .stat b { display:block; font-size:1.4rem; color:#115e59; }
+    .stat span { color:var(--muted); font-size:.82rem; }
+
+    /* Map */
+    #map { height:70vh; min-height:480px; border-radius:18px; }
+    .leaflet-popup-content strong { color:var(--accent); }
+
+    /* Table */
+    .table-wrap { overflow:auto; max-height:70vh; }
+    table { width:100%; border-collapse:collapse; font-size:.92rem; }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid #e5e7eb; vertical-align:top; }
+    th { position:sticky; top:0; background:#f9fafb; z-index:1; font-weight:700; font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+    tbody tr { transition: background .12s; }
+    tbody tr:hover { background:#f0fdfa; }
+    td a { color:var(--accent); text-decoration:none; font-weight:500; }
+    td a:hover { text-decoration:underline; }
+
+    .badge { display:inline-block; padding:4px 10px; border-radius:999px; background:#ecfeff; border:1px solid #a5f3fc; color:#155e75; font-size:.75rem; font-weight:600; margin:2px 4px 2px 0; white-space:nowrap; }
+    .small { color:var(--muted); font-size:.84rem; }
+    .list { margin:0; padding-left:18px; }
+    .list li { margin:6px 0; }
+    .footer { font-size:.86rem; color:var(--muted); line-height:1.5; }
+
+    .row-flex { display:flex; gap:8px; flex-wrap:wrap; }
+    .btn { display:inline-block; padding:8px 14px; border-radius:10px; border:1px solid var(--line); text-decoration:none; color:var(--text); background:#fff; font-size:.88rem; font-weight:500; cursor:pointer; transition: background .12s, border-color .12s; }
+    .btn:hover { background:#f0fdfa; border-color:var(--accent); }
+
+    /* Back to top */
+    .back-top { position:fixed; bottom:24px; right:24px; width:44px; height:44px; border-radius:50%; background:var(--accent); color:white; border:none; font-size:1.3rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.15); opacity:0; pointer-events:none; transition: opacity .25s, transform .25s; z-index:999; }
+    .back-top.show { opacity:1; pointer-events:auto; }
+    .back-top:hover { transform:scale(1.08); }
+
+    /* Source card */
+    .source-card h3 { margin-top:0; color:var(--accent); }
+
+    @media (max-width: 1100px){
+      .grid { grid-template-columns:1fr; }
+      #map, .table-wrap { max-height:none; height:50vh; }
+      .stats { grid-template-columns:repeat(3,1fr); gap:6px; }
+      .stat { padding:8px; }
+      .stat b { font-size:1.2rem; }
+    }
+    @media (max-width: 600px){
+      header { padding:20px 16px; }
+      .wrap { padding:12px; }
+      .stats { grid-template-columns:1fr 1fr 1fr; gap:6px; }
+      .stat b { font-size:1.1rem; }
+      table { font-size:.84rem; }
+      th, td { padding:8px 6px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Tulsa Food Pantry &amp; Meal Program Directory</h1>
+  <p>Interactive directory compiled from the Tulsa Library food resources list, the Food Bank of Eastern Oklahoma pantry finder and help pages, Cause IQ's Tulsa food distribution directory, and direct program websites for major providers.</p>
+  <p class="small" style="opacity:.75;">Updated for this build: April 15, 2026. Always call ahead before visiting, because hours, residency rules, and appointment requirements can change.</p>
+</header>
+
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+  <div class="grid">
+    <div class="card panel filters">
+      <label for="search">Search</label>
+      <input id="search" type="text" placeholder="Name, area, address, services, eligibility" />
+      <label for="areaFilter">Neighborhood / area</label>
+      <select id="areaFilter"><option value="">All areas</option></select>
+      <label for="serviceFilter">Service type</label>
+      <select id="serviceFilter">
+        <option value="">All services</option>
+        <option>Groceries</option>
+        <option>Meals</option>
+        <option>Groceries + Meals</option>
+        <option>Formula/Infant Supplies</option>
+        <option>Delivery</option>
+        <option>System support / locator</option>
+      </select>
+      <label for="eligibilityFilter">Eligibility focus</label>
+      <select id="eligibilityFilter">
+        <option value="">Any</option>
+        <option>Appointment required</option>
+        <option>ID required</option>
+        <option>Residency limit</option>
+        <option>Income requirement</option>
+        <option>No ID stated / open access</option>
+      </select>
+      <div class="row-flex">
+        <a class="btn" href="#table">Jump to table</a>
+        <button class="btn" id="resetBtn" type="button">Reset filters</button>
+      </div>
+      <hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb;">
+      <div class="footer">
+        <strong>How to use</strong>
+        <ul class="list">
+          <li>Use search plus filters to narrow to a neighborhood, zip-area, or service type.</li>
+          <li>Click any map marker for a quick summary with a Google Maps link.</li>
+          <li>Some organizations are support or advocacy groups rather than open pantry sites; those are labeled accordingly.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card panel"><div id="map"></div></div>
+  </div>
+
+  <div class="card panel" id="table" style="margin-top:18px;">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Program</th>
+            <th>Area</th>
+            <th>Address</th>
+            <th>Phone</th>
+            <th>Hours</th>
+            <th>Eligibility / requirements</th>
+            <th>Services</th>
+            <th>Website</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card panel source-card" style="margin-top:18px;">
+    <h3>Source notes</h3>
+    <ul class="list footer">
+      <li>Tulsa Library's "Tulsa Area Food Resources" page was updated November 14, 2025 and provided most pantry, meal, hours, and eligibility details.</li>
+      <li>Food Bank of Eastern Oklahoma pages were used for the regional pantry finder, emergency box help, and Community Food Bank contact details.</li>
+      <li>Cause IQ's Tulsa food distribution directory was used to make sure major Tulsa-area food organizations such as Community Food Bank of Eastern Oklahoma, Meals on Wheels of Metro Tulsa, Iron Gate Tulsa, Food On The Move, and Hunger Free Oklahoma were represented.</li>
+      <li>Direct program sites were used when they gave clearer current service descriptions or addresses than directory pages.</li>
+    </ul>
+  </div>
+</div>
+
+<button class="back-top" id="backTop" aria-label="Back to top">&uarr;</button>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const rows = [
+  {name:"Arms Around BA", area:"Broken Arrow / 74012", address:"840 S Elm Pl, Broken Arrow, OK", phone:"918-258-7714", hours:"Mon, Wed, Fri 10:00 AM-3:00 PM", eligibility:"Serves Broken Arrow, Bixby, and Coweta residents; ID and proof of address dated within the last 30 days.", services:"Groceries", website:"https://www.armsaroundba.org", eligibilityTag:"ID required; Residency limit", source:"Tulsa Library", lat:36.0395, lon:-95.7773},
+  {name:"Bixby Outreach Center", area:"Bixby area", address:"Bixby, OK (call for appointment)", phone:"918-366-9226", hours:"Tue-Thu 10:00 AM-3:00 PM; call for appointment", eligibility:"Serves Bixby, Mounds, Haskell, Kiefer, Beggs, Leonard, and Liberty residents.", services:"Groceries", website:"https://bixbyoutreach.org", eligibilityTag:"Appointment required; Residency limit", source:"Tulsa Library", lat:35.9423, lon:-95.8833},
+  {name:"Broken Arrow Neighbors", area:"Broken Arrow / Coweta", address:"315 W College St, Broken Arrow, OK", phone:"(see website appointment form)", hours:"By appointment only", eligibility:"Serves Broken Arrow and Coweta residents. Adults: ID, proof of residence, most recent monthly income. Children: proof of ID such as birth certificate or school enrollment.", services:"Groceries", website:"https://baneighbors.net/appointment-request/", eligibilityTag:"Appointment required; ID required; Residency limit", source:"Tulsa Library", lat:36.0527, lon:-95.7963},
+  {name:"Burkett Care Center", area:"Midtown / 74120", address:"1301 S Canton Ave, Tulsa, OK", phone:"", hours:"Last Saturday of the month 10:00 AM-12:00 PM; up to 2 visits per month", eligibility:"Bring ID.", services:"Groceries", website:"https://www.harborofgracechurch.org", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.1405, lon:-95.9780},
+  {name:"Catholic Charities Food Pantry", area:"North Tulsa / 74110", address:"2450 N Harvard Ave, Tulsa, OK", phone:"918-508-7135", hours:"Mon-Fri 9:00 AM-2:00 PM; Tue 5:00-7:00 PM; last Sat 9:00 AM-12:00 PM; 1 visit per month", eligibility:"Bring ID for each household member.", services:"Groceries", website:"https://cceok.org", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.1937, lon:-95.9570},
+  {name:"Christ for Humanity", area:"East Tulsa / 74112", address:"6413 E 13th St, Tulsa, OK", phone:"918-836-2424", hours:"Mon-Thu 10:00 AM-12:00 PM and 1:00-4:00 PM", eligibility:"Call ahead for current requirements.", services:"Groceries", website:"https://www.christforhumanity.org", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.1417, lon:-95.9067},
+  {name:"Commonground Church Food Pantry", area:"South Tulsa / 74145", address:"7810 E 49th St, Tulsa, OK", phone:"", hours:"Mon 6:00-8:00 PM; up to 2 visits per month", eligibility:"Bring ID and proof of residence.", services:"Groceries", website:"https://www.cg.church", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.0923, lon:-95.8870},
+  {name:"Compassion Ministries Mobile Missions Network", area:"West Tulsa / 74107", address:"2821 W 40th St, Tulsa, OK", phone:"", hours:"Sat 9:00 AM-noon", eligibility:"No ID requirement stated on source list.", services:"Groceries", extraServices:"Clothing closet; showers", website:"https://www.mobilemissionsnetwork.com", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.1063, lon:-96.0330},
+  {name:"Dividing Bread Ministry - Sperry", area:"Sperry", address:"217 S 1st St, Sperry, OK", phone:"", hours:"Sat 10:30 AM-12:00 PM", eligibility:"Call ahead for current rules.", services:"Groceries", website:"https://dividingbreadministry.com", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.2947, lon:-95.9897},
+  {name:"Dividing Bread Ministry - Hominy", area:"Hominy", address:"121 S Price Ave, Hominy, OK", phone:"", hours:"Mon 11:00 AM-1:00 PM", eligibility:"Call ahead for current rules.", services:"Groceries", website:"https://dividingbreadministry.com", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.4133, lon:-96.3943},
+  {name:"Emergency Infant Services - Downtown", area:"Downtown / 74119", address:"1110 S Denver Ave, Tulsa, OK", phone:"", hours:"Mon-Fri 9:00 AM-2:30 PM", eligibility:"Families with one or more children under 5. Bring your ID and identification for each child under 5; no Social Security cards required.", services:"Formula/Infant Supplies", website:"https://www.eistulsa.org", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.1427, lon:-95.9770},
+  {name:"Emergency Infant Services - TPS Parent Resource Center", area:"North Tulsa / 74106", address:"525 E 46th St N, Tulsa, OK", phone:"", hours:"Mon-Fri 10:00 AM-4:00 PM (express visits only)", eligibility:"Families with children under 5; ID plus child identification required.", services:"Formula/Infant Supplies", website:"https://www.eistulsa.org", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.2247, lon:-95.9830},
+  {name:"Eastland Assembly of God", area:"East Tulsa / 74128", address:"12310 E 21st St, Tulsa, OK", phone:"", hours:"First and third Tue 6:00-7:00 PM", eligibility:"Serves zip codes 74108, 74112, 74128, 74129, 74134, 74145, and 74146.", services:"Groceries", website:"https://www.eastlandag.org", eligibilityTag:"Residency limit", source:"Tulsa Library", lat:36.1330, lon:-95.8420},
+  {name:"First Baptist Caring Center", area:"Downtown / 74103", address:"305 S Detroit Ave, Tulsa, OK", phone:"", hours:"Mon-Thu 10:00-11:45 AM; 1 visit per month", eligibility:"Bring ID and proof of residence.", services:"Groceries", website:"https://tulsafbc.org", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.1530, lon:-95.9870},
+  {name:"Food On The Move", area:"Mobile / North & East Tulsa events", address:"Various sites across Tulsa metro (see events page)", phone:"", hours:"Distribution dates vary by site; see events page. Current 2026 recurring sites include TCC Northeast Campus, Chamberlain Park, and Northwest Tulsa Hub.", eligibility:"Open at events. Some event pages state no proof of need or ID required; short registration may be requested at some distributions.", services:"Groceries + Meals", website:"https://www.foodonthemoveok.com/upcoming-events", eligibilityTag:"No ID stated / open access", source:"Tulsa Library + official site", lat:36.1870, lon:-95.9530},
+  {name:"Guts Church Food Outreach", area:"East Tulsa / BA Expressway", address:"9120 E Broken Arrow Expy, Tulsa, OK", phone:"", hours:"Fri 9:30-10:30 AM", eligibility:"No requirements stated on source list.", services:"Groceries", website:"https://gutschurch.com", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.1220, lon:-95.8700},
+  {name:"Harvest House", area:"South Tulsa / 74136", address:"1439 E 71st St, Tulsa, OK", phone:"918-884-7667", hours:"Wednesdays by appointment; emergency preselected groceries Tue and Wed 1:00-4:00 PM", eligibility:"Call and leave a message for an appointment.", services:"Groceries", extraServices:"Clothing; eyeglasses; bus tokens; utility help; infant services", website:"https://www.tulsaharvesthouse.org", eligibilityTag:"Appointment required", source:"Tulsa Library", lat:36.0577, lon:-95.9650},
+  {name:"Heaven Sent Food Pantry", area:"Skiatook", address:"1500 S Osage Ave, Skiatook, OK", phone:"918-210-7780", hours:"See Facebook page for dates and times", eligibility:"Call or check Facebook before visiting.", services:"Groceries", website:"https://www.facebook.com/heavensentfoodpantry", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.3473, lon:-96.0150},
+  {name:"Helping Hand Ministry", area:"Downtown / 74119", address:"709 S Boston Ave, Tulsa, OK", phone:"918-582-1356", hours:"Mon and Tue 9:00 AM-12:00 PM; call for appointment", eligibility:"Appointment required; confirm current documentation needs by phone.", services:"Groceries", website:"https://helpinghandministry918.com", eligibilityTag:"Appointment required", source:"Tulsa Library", lat:36.1463, lon:-95.9910},
+  {name:"Iron Gate Tulsa", area:"Downtown / 74103", address:"501 W Archer St, Tulsa, OK 74103", phone:"918-879-1702", hours:"Hot meal daily 8:30-10:30 AM; grocery pantry by appointment Mon, Wed, Fri 1:00-2:00 PM; 1 grocery visit per month", eligibility:"Groceries by appointment; no residency limit stated on library list.", services:"Groceries + Meals", website:"https://www.irongatetulsa.org", eligibilityTag:"Appointment required", source:"Tulsa Library + Tulsa Library org page", lat:36.1610, lon:-95.9980},
+  {name:"Islamic Society of Tulsa Food Bank", area:"South Tulsa / 74135", address:"4630 S Irvington Ave, Tulsa, OK", phone:"918-240-3701", hours:"Visit website to complete application", eligibility:"Application required through website.", services:"Groceries", website:"https://istulsa.org", eligibilityTag:"Appointment required", source:"Tulsa Library", lat:36.1070, lon:-95.9367},
+  {name:"Jenks Community Food Bank", area:"Jenks", address:"324 W Aquarium Pl, Jenks, OK", phone:"", hours:"Wed and Sat 10:00 AM-12:00 PM; 1 non-perishable visit per month; 1 perishable visit per week", eligibility:"Serves residents in the Jenks School District; bring ID and proof of residence.", services:"Groceries", website:"https://www.jenksfoodbank.com", eligibilityTag:"ID required; Residency limit", source:"Tulsa Library", lat:36.0147, lon:-95.9787},
+  {name:"John 3:16 Mission", area:"North Tulsa / 74106", address:"2027 N Martin Luther King Jr Blvd, Tulsa, OK", phone:"918-592-1186", hours:"Reservations required; 1 visit per month", eligibility:"Bring ID and proof of residence.", services:"Groceries", website:"https://john316mission.org", eligibilityTag:"Appointment required; ID required", source:"Tulsa Library", lat:36.1877, lon:-95.9963},
+  {name:"Kendall Whittier, Inc.", area:"Kendall Whittier / 74104", address:"2915 E 5th St, Tulsa, OK", phone:"918-592-3000", hours:"Call to apply", eligibility:"Serves residents in the area bounded by Lansing and Harvard, Pine and 11th.", services:"Groceries", website:"https://www.kendallwhittierinc.org", eligibilityTag:"Residency limit", source:"Tulsa Library", lat:36.1487, lon:-95.9497},
+  {name:"Loaves and Fishes Ministries", area:"East Tulsa / 74128", address:"11321 E 19th St, Tulsa, OK", phone:"918-234-8577", hours:"Tue, Wed, Sat meal at 10:00 AM; food bank distribution at 10:30 AM; must arrive by 10:15 for grocery assistance", eligibility:"Photo ID and proof of Oklahoma residence.", services:"Groceries + Meals", website:"https://loavesandfishes.net", eligibilityTag:"ID required", source:"Tulsa Library + individual page", lat:36.1357, lon:-95.8530},
+  {name:"Manna House", area:"North Tulsa / 74107?", address:"1307 W 22nd St, Tulsa, OK", phone:"918-949-6292", hours:"Tue 9:00 AM-2:00 PM while supplies last", eligibility:"Serves residents of zip codes 74110 and 74115.", services:"Groceries", website:"https://www.abbacenter.org", eligibilityTag:"Residency limit", source:"Tulsa Library", lat:36.1277, lon:-96.0090},
+  {name:"Mercy Mission II", area:"Glenpool", address:"114 E 147th St, Glenpool, OK", phone:"", hours:"Mon and Wed 12:00-3:00 PM; Sat 10:00 AM-12:00 PM", eligibility:"Call ahead for current requirements.", services:"Groceries", website:"https://mercymission2.org", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:35.9550, lon:-96.0020},
+  {name:"The Ministry Center", area:"West Tulsa / 74127", address:"312 S 33rd W Ave, Tulsa, OK", phone:"918-585-5310", hours:"Tue-Thu 9:30 AM-12:30 PM", eligibility:"ID and proof of dependents (Social Security cards, school enrollment, birth certificate, etc.).", services:"Groceries", website:"https://southtulsa.org", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.1517, lon:-96.0297},
+  {name:"Mission on Main Street", area:"Collinsville", address:"924 W Main St, Collinsville, OK", phone:"", hours:"First Sat 8:30-11:00 AM and second Tue 6:00-8:00 PM; 1 visit per month", eligibility:"Bring ID and current utility bill.", services:"Groceries", website:"https://www.missiononmainstreet.org", eligibilityTag:"ID required", source:"Tulsa Library", lat:36.3620, lon:-95.8453},
+  {name:"Neighbors Along the Line", area:"Sand Springs / West Tulsa edge", address:"5000 W Charles Page Blvd, Tulsa, OK", phone:"", hours:"Mon and Tue 1:00-4:00 PM; Wed 3:00-5:45 PM; Thu 1:00-6:00 PM; 1 visit per month", eligibility:"Service area between western edge of Sand Springs and I-244, and Edison to the Arkansas River. Bring ID, proof of residence in service area, Social Security cards for household members, DHS food stamp letter, plus proof of income or no income.", services:"Groceries", website:"https://www.neighborsalongtheline.org", eligibilityTag:"ID required; Residency limit; Income requirement", source:"Tulsa Library", lat:36.1477, lon:-96.0580},
+  {name:"Night Light", area:"West Tulsa / 74127", address:"201 N Maybelle Ave, Tulsa, OK", phone:"", hours:"Thu 7:00-9:00 PM", eligibility:"No requirements stated on source list.", services:"Groceries + Meals", extraServices:"Dog food", website:"https://www.citylightsok.org", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.1587, lon:-96.0253},
+  {name:"Owasso Community Resources", area:"Owasso", address:"101 N Birch St, Owasso, OK", phone:"", hours:"Mon-Fri 11:00 AM-2:00 PM; check website for select Thursday extended hours; 1 non-perishable visit every 2 months; 1 perishable visit per week", eligibility:"Serves Owasso, Collinsville, and Sperry school districts.", services:"Groceries", website:"https://www.owassohelps.org", eligibilityTag:"Residency limit", source:"Tulsa Library", lat:36.2700, lon:-95.8510},
+  {name:"Restore Hope Ministries - West", area:"West Tulsa / 74107", address:"2960 Charles Page Blvd, Tulsa, OK", phone:"", hours:"Mon-Thu 12:30-3:30 PM", eligibility:"Bring ID for each household member and proof of residence in Tulsa County; check closure dates online.", services:"Groceries", website:"https://www.restorehope.org", eligibilityTag:"ID required; Residency limit", source:"Tulsa Library", lat:36.1453, lon:-96.0260},
+  {name:"Restore Hope Ministries - East", area:"East Tulsa / 74133", address:"6910 S 101st E Ave, Tulsa, OK", phone:"", hours:"Mon-Thu 12:30-3:30 PM", eligibility:"Bring ID for each household member and proof of residence in Tulsa County; check closure dates online.", services:"Groceries", website:"https://www.restorehope.org", eligibilityTag:"ID required; Residency limit", source:"Tulsa Library", lat:36.0617, lon:-95.8537},
+  {name:"St. Mark's Food Pantry", area:"East Tulsa / 74116", address:"10513 E Admiral Pl, Tulsa, OK", phone:"918-437-4953", hours:"Thu 10:00 AM-12:00 PM", eligibility:"Call ahead for current rules.", services:"Groceries", website:"https://www.stmarkstulsa.org", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.1543, lon:-95.8577},
+  {name:"Sand Springs Community Services", area:"Sand Springs", address:"114 W 4th St, Sand Springs, OK", phone:"918-245-5183", hours:"Mon-Thu 10:00 AM-2:30 PM; after-hours emergency appointments available", eligibility:"Call for emergency appointment details.", services:"Groceries", website:"https://sscsok.org", eligibilityTag:"Appointment required", source:"Tulsa Library", lat:36.1420, lon:-96.1080},
+  {name:"Sandusky Ave Church Food Pantry", area:"Midtown / East Tulsa / 74112", address:"4424 E 11th St, Tulsa, OK", phone:"918-834-4427", hours:"Third Sundays 12:00-1:30 PM; 1 visit per month; emergency aid by appointment", eligibility:"Bring ID and proof of residence in Tulsa County.", services:"Groceries", website:"https://www.sanduskyave.com", eligibilityTag:"ID required; Residency limit", source:"Tulsa Library", lat:36.1460, lon:-95.9287},
+  {name:"Skiatook Emergency Assistance Center (SEAC)", area:"Skiatook", address:"319 E Rogers Blvd, Skiatook, OK", phone:"918-396-1137", hours:"Office Mon 9:00 AM-2:00 PM; assistance Tue 11:00 AM-6:00 PM, Wed 10:00 AM-2:00 PM, Thu 10:00 AM-2:00 PM, third Sat 10:00 AM-2:00 PM", eligibility:"Serves Avant, Skiatook, and Sperry. Bring ID, proof of residence, and proof of income. Income requirement applies. Utility assistance bill must be in your name.", services:"Groceries", website:"https://www.facebook.com/SkiatookEmergencyAssistanceCenter", eligibilityTag:"ID required; Residency limit; Income requirement", source:"Tulsa Library", lat:36.3700, lon:-96.0080},
+  {name:"South Tulsa Community House", area:"South Tulsa / 74105", address:"5780 S Peoria Ave, Tulsa, OK", phone:"918-742-5597", hours:"Mon-Thu 9:00 AM-3:00 PM; Fri 9:00 AM-1:00 PM; first and second Wed 9:00 AM-5:30 PM; limited evening hours by appointment", eligibility:"Call for an appointment.", services:"Groceries", website:"https://southtulsacommunityhouse.org", eligibilityTag:"Appointment required", source:"Tulsa Library", lat:36.0717, lon:-95.9753},
+  {name:"Southwest Tulsa Trading Company / Four Mothers Collective", area:"Kendall Whittier / 74120", address:"1306 E 11th St, Tulsa, OK", phone:"918-232-1890 / 539-900-6455", hours:"Daily 10:00 AM-7:00 PM", eligibility:"No requirements stated on source list.", services:"Groceries", website:"https://www.facebook.com/SouthwestTulsaTradingCo", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.1467, lon:-95.9720},
+  {name:"Tulsa Community Service Center", area:"East Tulsa / 74129", address:"2015 S Lakewood Ave, Tulsa, OK", phone:"918-835-4489", hours:"Wed 2:00-4:00 PM", eligibility:"Call ahead for current rules.", services:"Groceries", website:"https://www.tulsacommunityservicecenter.org", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.1287, lon:-95.8810},
+  {name:"Tulsa Dream Center - North", area:"North Tulsa / 74126", address:"200 W 46th St N, Tulsa, OK", phone:"", hours:"Groceries Tue and Thu 10:00 AM; meals Tue and Thu 11:00 AM-1:00 PM", eligibility:"No requirements stated on source list.", services:"Groceries + Meals", website:"https://www.tulsadreamcenter.org", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.2247, lon:-95.9970},
+  {name:"Tulsa Dream Center - Southwest", area:"Southwest Tulsa", address:"4122 W 55th Pl, Tulsa, OK", phone:"", hours:"Groceries Wed 1:00 PM; meals Wed 11:30 AM-12:45 PM; kids meal Thu 6:00-8:00 PM", eligibility:"No requirements stated on source list.", services:"Groceries + Meals", website:"https://www.tulsadreamcenter.org", eligibilityTag:"No ID stated / open access", source:"Tulsa Library", lat:36.0837, lon:-96.0430},
+  {name:"Community Food Bank of Eastern Oklahoma", area:"North Tulsa / 74106", address:"1304 N Kenosha Ave, Tulsa, OK 74106", phone:"918-585-2800", hours:"Mon-Thu 8:00 AM-5:00 PM; Fri 8:00 AM-4:30 PM. Emergency food boxes available weekdays; call before visiting.", eligibility:"Regional food bank and emergency food box site. Pantry finder covers 24 eastern Oklahoma counties; some partner pantries have their own eligibility criteria.", services:"System support / locator", website:"https://okfoodbank.org/find-food/", eligibilityTag:"No ID stated / open access", source:"Food Bank of Eastern Oklahoma + Cause IQ", lat:36.1741, lon:-95.9823},
+  {name:"Meals on Wheels of Metro Tulsa", area:"South Tulsa / 74135", address:"5151 E 51st St, Tulsa, OK 74135", phone:"918-627-4105", hours:"Office hours not posted on homepage. Meal delivery generally Mon-Fri 11:00 AM-1:00 PM.", eligibility:"Homebound seniors and disabled homebound individuals in Tulsa, Broken Arrow, Bixby, Glenpool, Jenks, Owasso, Sand Springs, and Sapulpa. Application line 918-627-4103.", services:"Delivery", website:"https://www.mealsonwheelstulsa.org/apply", eligibilityTag:"Appointment required; Residency limit", source:"Meals on Wheels site + Cause IQ", lat:36.0903, lon:-95.9186},
+  {name:"Hunger Free Oklahoma", area:"Downtown / 74120", address:"907 S Detroit Ave, Suite 600, Tulsa, OK 74120", phone:"918-591-2491; SNAP hotline 1-877-760-0114", hours:"Direct public food distribution hours not listed; this is not a walk-in pantry.", eligibility:"Statewide systems, policy, and SNAP outreach organization rather than a pantry/meal site.", services:"System support / locator", website:"https://www.hungerfreeok.org/contact-us/", eligibilityTag:"No ID stated / open access", source:"Hunger Free Oklahoma contact search result + Cause IQ", lat:36.1443, lon:-95.9867}
+];
+
+/* ── DOM refs ── */
+const tbody = document.getElementById('tbody');
+const search = document.getElementById('search');
+const areaFilter = document.getElementById('areaFilter');
+const serviceFilter = document.getElementById('serviceFilter');
+const eligibilityFilter = document.getElementById('eligibilityFilter');
+const resetBtn = document.getElementById('resetBtn');
+const statsEl = document.getElementById('stats');
+const backTop = document.getElementById('backTop');
+
+/* ── Populate area dropdown ── */
+[...new Set(rows.map(r=>r.area).sort())].forEach(area => {
+  const opt = document.createElement('option'); opt.value = area; opt.textContent = area; areaFilter.appendChild(opt);
+});
+
+/* ── Stats ── */
+function renderStats(filtered){
+  const grocery = filtered.filter(r=>r.services.includes('Groceries')).length;
+  const meals = filtered.filter(r=>r.services.includes('Meals') || r.services === 'Delivery').length;
+  statsEl.innerHTML = `
+    <div class="stat"><b>${filtered.length}</b><span>programs shown</span></div>
+    <div class="stat"><b>${grocery}</b><span>with grocery help</span></div>
+    <div class="stat"><b>${meals}</b><span>meal or delivery</span></div>`;
+}
+
+/* ── Helpers ── */
+function mapsLink(addr){ return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`; }
+
+function filterRows(){
+  const q = search.value.toLowerCase().trim();
+  const a = areaFilter.value;
+  const s = serviceFilter.value;
+  const e = eligibilityFilter.value;
+  return rows.filter(r => {
+    const blob = `${r.name} ${r.area} ${r.address} ${r.phone} ${r.hours} ${r.eligibility} ${r.services} ${r.website} ${r.source}`.toLowerCase();
+    return (!q || blob.includes(q))
+      && (!a || r.area===a)
+      && (!s || r.services===s || (s==='Groceries' && r.services.includes('Groceries')) || (s==='Meals' && r.services.includes('Meals')))
+      && (!e || r.eligibilityTag.includes(e));
+  });
+}
+
+/* ── Table ── */
+function renderTable(filtered){
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td><strong>${r.name}</strong><div class="small">${r.source}</div>${r.extraServices ? `<div class="small">Also: ${r.extraServices}</div>` : ''}</td>
+      <td>${r.area}</td>
+      <td>${r.address}<div><a href="${mapsLink(r.address)}" target="_blank" rel="noreferrer">Google Maps &rarr;</a></div></td>
+      <td>${r.phone || '\u2014'}</td>
+      <td>${r.hours}</td>
+      <td>${r.eligibility}<div class="small">${r.eligibilityTag}</div></td>
+      <td><span class="badge">${r.services}</span></td>
+      <td>${r.website ? `<a href="${r.website}" target="_blank" rel="noreferrer">Visit &rarr;</a>` : '\u2014'}</td>
+    </tr>`).join('');
+}
+
+/* ── Map (instant — no geocoding delay) ── */
+const map = L.map('map').setView([36.154, -95.992], 10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+
+const tealIcon = L.divIcon({
+  className: '',
+  html: `<svg width="28" height="40" viewBox="0 0 28 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.268 21.732 0 14 0z" fill="#0f766e"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+  </svg>`,
+  iconSize: [28, 40],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -36]
+});
+
+let markers = [];
+
+function renderMap(filtered){
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  const bounds = [];
+  for (const r of filtered) {
+    if (!r.lat || !r.lon) continue;
+    const marker = L.marker([r.lat, r.lon], { icon: tealIcon }).addTo(map).bindPopup(`
+      <strong>${r.name}</strong><br>
+      ${r.address}<br>
+      <em>${r.area}</em><br>
+      ${r.phone ? r.phone + '<br>' : ''}
+      ${r.hours}<br>
+      <span style="display:inline-block;margin-top:4px;"><a href="${mapsLink(r.address)}" target="_blank" rel="noreferrer" style="color:#0f766e;font-weight:600;">Open in Google Maps &rarr;</a></span>
+    `);
+    markers.push(marker);
+    bounds.push([r.lat, r.lon]);
+  }
+  if (bounds.length) map.fitBounds(bounds, { padding:[30,30] });
+}
+
+/* ── Refresh ── */
+function refresh(){
+  const filtered = filterRows();
+  renderStats(filtered);
+  renderTable(filtered);
+  renderMap(filtered);
+}
+
+/* ── Events ── */
+[search, areaFilter, serviceFilter, eligibilityFilter].forEach(el => el.addEventListener('input', refresh));
+resetBtn.addEventListener('click', ()=>{ search.value=''; areaFilter.value=''; serviceFilter.value=''; eligibilityFilter.value=''; refresh(); });
+
+/* ── Back to top button ── */
+window.addEventListener('scroll', ()=>{
+  backTop.classList.toggle('show', window.scrollY > 400);
+});
+backTop.addEventListener('click', ()=> window.scrollTo({ top:0, behavior:'smooth' }));
+
+/* ── Go ── */
+refresh();
+</script>
+</body>
+</html>
