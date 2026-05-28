@@ -152,6 +152,26 @@
     .farm-disclaimer { font-size:.8rem; color:var(--farm-muted); line-height:1.5; margin-top:22px; }
     .farm-scrim { display:none; }
 
+    /* Personal tracking */
+    .farm-trackbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; font-size:.85rem; color:var(--farm-muted); }
+    .farm-trackbar select { padding:7px 10px; border-radius:10px; border:1px solid var(--farm-line); background:var(--farm-card); font:inherit; color:var(--farm-text); }
+    .track-summary { font-weight:600; }
+    .track-actions { margin-left:auto; display:flex; gap:8px; }
+    .track-actions button { padding:7px 12px; border-radius:10px; border:1px solid var(--farm-line); background:var(--farm-card); font:inherit; font-weight:600; color:var(--farm-accent-dark); cursor:pointer; }
+    .track-actions button:hover { background:var(--farm-chip); }
+    .farm-card.is-visited { border-color:var(--farm-accent); box-shadow:inset 0 0 0 1px var(--farm-accent), 0 8px 24px rgba(60,53,43,.06); }
+    .farm-track { border-top:1px dashed var(--farm-line); margin-top:4px; padding-top:10px; display:flex; flex-direction:column; gap:8px; }
+    .track-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .track-visited { padding:6px 12px; border-radius:999px; border:1px solid var(--farm-line); background:var(--farm-card); font:inherit; font-size:.8rem; font-weight:600; color:var(--farm-muted); cursor:pointer; transition:background .12s, color .12s, border-color .12s; }
+    .track-visited:hover { border-color:var(--farm-accent); }
+    .track-visited.on { background:var(--farm-accent); color:#fff; border-color:var(--farm-accent); }
+    .track-stars { display:inline-flex; gap:2px; font-size:1.15rem; color:#d9d2c4; cursor:pointer; user-select:none; }
+    .track-stars .star { transition:color .1s, transform .1s; }
+    .track-stars .star:hover { transform:scale(1.15); }
+    .track-stars .star.on { color:#e0a73e; }
+    .track-notes { width:100%; border:1px solid var(--farm-line); border-radius:10px; padding:8px 10px; font:inherit; font-size:.85rem; color:var(--farm-text); background:#fffef9; resize:vertical; outline:none; }
+    .track-notes:focus { border-color:var(--farm-accent); box-shadow:0 0 0 3px rgba(93,118,80,.12); }
+
     @media (max-width:860px){
       .farm-layout { grid-template-columns:1fr; }
       .farm-drawer-btn { display:block; }
@@ -265,6 +285,21 @@
         <ul id="farmCats"></ul>
       </aside>
       <div class="farm-main">
+        <div class="farm-trackbar">
+          <label>Show: <select id="farmTrackFilter">
+            <option value="all">All farms</option>
+            <option value="unvisited">Not visited</option>
+            <option value="visited">Visited</option>
+            <option value="rated">Rated</option>
+            <option value="notes">With notes</option>
+          </select></label>
+          <span class="track-summary" id="trackSummary"></span>
+          <span class="track-actions">
+            <button id="trackExport" type="button">Export notes</button>
+            <button id="trackImport" type="button">Import</button>
+            <input type="file" id="trackImportFile" accept="application/json" hidden>
+          </span>
+        </div>
         <div class="farm-stats" id="farmStats"></div>
         <div id="farmMap"></div>
         <div class="farm-grid" id="farmGrid"></div>
@@ -559,7 +594,24 @@ const farmStatsEl = document.getElementById('farmStats');
 const farmEmpty = document.getElementById('farmEmpty');
 const farmSidebar = document.getElementById('farmSidebar');
 const farmScrim = document.getElementById('farmScrim');
+const farmTrackFilter = document.getElementById('farmTrackFilter');
+const trackSummary = document.getElementById('trackSummary');
 let farmActiveCat = 'All Farms';
+
+/* ── Personal tracking (visited / rating / notes), saved in THIS browser ── */
+const TRACK_KEY = 'tulsaFarmTracking';
+function loadTrack(){ try { return JSON.parse(localStorage.getItem(TRACK_KEY)) || {}; } catch(e){ return {}; } }
+function saveTrack(){ try { localStorage.setItem(TRACK_KEY, JSON.stringify(farmTrack)); } catch(e){} }
+let farmTrack = loadTrack();
+function getTrack(name){ return farmTrack[name] || { visited:false, rating:0, notes:'' }; }
+function setTrack(name, patch){ farmTrack[name] = Object.assign(getTrack(name), patch); saveTrack(); }
+function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function recomputeTrackSummary(){
+  const v = farms.filter(f => getTrack(f.name).visited).length;
+  const r = farms.filter(f => getTrack(f.name).rating > 0).length;
+  const n = farms.filter(f => { const t = getTrack(f.name); return t.notes && t.notes.trim(); }).length;
+  if (trackSummary) trackSummary.textContent = `${v} visited · ${r} rated · ${n} with notes`;
+}
 let farmMap = null, farmMarkers = [], farmMapInited = false;
 
 const farmIcon = L.divIcon({
@@ -581,8 +633,16 @@ function renderFarmCats(){
 }
 function farmFiltered(){
   const q = farmSearch.value.toLowerCase().trim();
+  const tf = farmTrackFilter ? farmTrackFilter.value : 'all';
   return farms.filter(f => {
     if (farmActiveCat !== 'All Farms' && !f.categories.includes(farmActiveCat)) return false;
+    if (tf !== 'all') {
+      const t = getTrack(f.name);
+      if (tf === 'visited' && !t.visited) return false;
+      if (tf === 'unvisited' && t.visited) return false;
+      if (tf === 'rated' && !(t.rating > 0)) return false;
+      if (tf === 'notes' && !(t.notes && t.notes.trim())) return false;
+    }
     if (!q) return true;
     const blob = `${f.name} ${f.city} ${f.summary || ''} ${(f.products || []).join(' ')} ${(f.tags || []).join(' ')} ${f.categories.join(' ')}`.toLowerCase();
     return blob.includes(q);
@@ -600,7 +660,10 @@ function renderFarmCards(list){
     if (f.phone) meta.push(`<span>&#128222; <a href="tel:${f.phone.replace(/[^0-9]/g,'')}">${f.phone}</a></span>`);
     const prod = (f.products && f.products.length) ? `<p class="farm-summary"><strong>Sells:</strong> ${f.products.slice(0,6).join(', ')}</p>` : '';
     const tags = (f.tags && f.tags.length) ? `<div class="farm-tags">${f.tags.slice(0,5).map(t => `<span class="farm-tag">${t}</span>`).join('')}</div>` : '';
-    return `<article class="farm-card">
+    const idx = farms.indexOf(f);
+    const tr = getTrack(f.name);
+    const stars = [1,2,3,4,5].map(n => `<span class="star ${n <= tr.rating ? 'on' : ''}" data-star="${n}" role="button" aria-label="Rate ${n}">&#9733;</span>`).join('');
+    return `<article class="farm-card${tr.visited ? ' is-visited' : ''}">
       <div class="farm-cat">${f.categories[0]}</div>
       <h3>${f.name}</h3>
       ${f.summary ? `<p class="farm-summary">${f.summary}</p>` : ''}
@@ -610,6 +673,13 @@ function renderFarmCards(list){
       <div class="farm-links">
         <a class="lk-site" href="${f.website}" target="_blank" rel="noreferrer">Website &#8599;</a>
         <a class="lk-map" href="${farmMapsLink(f)}" target="_blank" rel="noreferrer">Map &#8599;</a>
+      </div>
+      <div class="farm-track" data-idx="${idx}">
+        <div class="track-row">
+          <button class="track-visited${tr.visited ? ' on' : ''}" data-act="visited" type="button">${tr.visited ? '&#10003; Visited' : 'Mark visited'}</button>
+          <span class="track-stars" title="Your rating">${stars}</span>
+        </div>
+        <textarea class="track-notes" data-act="notes" rows="2" placeholder="Your notes&hellip;">${escapeHtml(tr.notes)}</textarea>
       </div>
     </article>`;
   }).join('');
@@ -656,8 +726,62 @@ farmSearch.addEventListener('input', refreshFarms);
 document.getElementById('farmFilterToggle').addEventListener('click', openFarmDrawer);
 document.getElementById('farmSidebarClose').addEventListener('click', closeFarmDrawer);
 farmScrim.addEventListener('click', closeFarmDrawer);
+
+/* ── Tracking events ── */
+function syncCardTrack(track){
+  const t = getTrack(farms[+track.dataset.idx].name);
+  track.closest('.farm-card').classList.toggle('is-visited', t.visited);
+  const btn = track.querySelector('.track-visited');
+  btn.classList.toggle('on', t.visited);
+  btn.innerHTML = t.visited ? '✓ Visited' : 'Mark visited';
+  track.querySelectorAll('.star').forEach(s => s.classList.toggle('on', +s.dataset.star <= t.rating));
+}
+farmGrid.addEventListener('click', e => {
+  const track = e.target.closest('.farm-track'); if (!track) return;
+  const name = farms[+track.dataset.idx].name;
+  if (e.target.classList.contains('track-visited')) {
+    setTrack(name, { visited: !getTrack(name).visited });
+  } else if (e.target.classList.contains('star')) {
+    const n = +e.target.dataset.star;
+    setTrack(name, { rating: getTrack(name).rating === n ? 0 : n });
+  } else return;
+  recomputeTrackSummary();
+  if (farmTrackFilter.value !== 'all') refreshFarms(); else syncCardTrack(track);
+});
+farmGrid.addEventListener('input', e => {
+  if (!e.target.classList.contains('track-notes')) return;
+  const track = e.target.closest('.farm-track');
+  setTrack(farms[+track.dataset.idx].name, { notes: e.target.value });
+  recomputeTrackSummary();
+});
+farmTrackFilter.addEventListener('change', refreshFarms);
+document.getElementById('trackExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(farmTrack, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'farm-tracking-backup.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+const trackImportFile = document.getElementById('trackImportFile');
+document.getElementById('trackImport').addEventListener('click', () => trackImportFile.click());
+trackImportFile.addEventListener('change', () => {
+  const file = trackImportFile.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (data && typeof data === 'object') {
+        Object.keys(data).forEach(k => { farmTrack[k] = Object.assign(getTrack(k), data[k]); });
+        saveTrack(); recomputeTrackSummary(); refreshFarms();
+      }
+    } catch (e) { alert('Could not read that backup file.'); }
+    trackImportFile.value = '';
+  };
+  reader.readAsText(file);
+});
+
 renderFarmCats();
 refreshFarms();
+recomputeTrackSummary();
 
 /* ── Tab switching ── */
 const viewPantries = document.getElementById('view-pantries');
