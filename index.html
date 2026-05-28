@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tulsa Food Pantry & Meal Program Directory</title>
+  <title>Tulsa Food & Farm Directory</title>
 
   <!-- Open Graph for link previews -->
-  <meta property="og:title" content="Tulsa Food Pantry & Meal Program Directory" />
+  <meta property="og:title" content="Tulsa Food & Farm Directory" />
   <meta property="og:description" content="Interactive map and directory of 47 food pantries, meal programs, and delivery services across the Tulsa metro area." />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="en_US" />
@@ -90,15 +90,92 @@
       table { font-size:.84rem; }
       th, td { padding:8px 6px; }
     }
+
+    /* ===== Tabs ===== */
+    .tabs { max-width:1400px; margin:0 auto; padding:14px 20px 0; display:flex; gap:8px; }
+    .tab { font:inherit; font-size:.95rem; font-weight:600; padding:11px 18px; border:1px solid var(--line); border-bottom:none; background:#eef1f4; color:var(--muted); border-radius:12px 12px 0 0; cursor:pointer; transition:background .15s, color .15s; }
+    .tab:hover { background:#fff; }
+    .tab.active { background:#fff; color:var(--text); box-shadow:0 -2px 8px rgba(15,23,42,.04); }
+    body.farms-active { background:#f6f3ec; }
+    body.farms-active .tab.active { color:#42563a; }
+
+    /* ===== Farm view (earth tones) ===== */
+    #view-farms {
+      --farm-bg:#f6f3ec; --farm-card:#fffdf8; --farm-text:#3c352b; --farm-muted:#857c6c;
+      --farm-line:#e6ddcb; --farm-accent:#5d7650; --farm-accent-dark:#42563a; --farm-terra:#c06f4c;
+      --farm-chip:#eef1e6;
+      background:var(--farm-bg);
+    }
+    .farm-wrap { max-width:1400px; margin:0 auto; padding:20px; color:var(--farm-text); }
+    .farm-toolbar { display:flex; gap:10px; margin-bottom:16px; align-items:center; }
+    .farm-toolbar input { flex:1; padding:13px 16px; border-radius:14px; border:1px solid var(--farm-line); font-size:1rem; background:var(--farm-card); color:var(--farm-text); outline:none; transition:border-color .15s, box-shadow .15s; }
+    .farm-toolbar input:focus { border-color:var(--farm-accent); box-shadow:0 0 0 3px rgba(93,118,80,.15); }
+    .farm-drawer-btn { display:none; padding:13px 16px; border-radius:14px; border:1px solid var(--farm-line); background:var(--farm-card); font:inherit; font-weight:600; color:var(--farm-accent-dark); cursor:pointer; white-space:nowrap; }
+
+    .farm-layout { display:grid; grid-template-columns:248px 1fr; gap:20px; align-items:start; }
+    .farm-sidebar { background:var(--farm-card); border:1px solid var(--farm-line); border-radius:18px; padding:10px; position:sticky; top:16px; }
+    .farm-sidebar-head { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--farm-muted); padding:8px 10px; }
+    .farm-sidebar-head button { display:none; background:none; border:none; font-size:1.5rem; line-height:1; color:var(--farm-muted); cursor:pointer; }
+    #farmCats { list-style:none; margin:0; padding:0; }
+    #farmCats li { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 12px; border-radius:11px; cursor:pointer; font-size:.92rem; font-weight:500; transition:background .12s, color .12s; }
+    #farmCats li:hover { background:var(--farm-chip); }
+    #farmCats li.active { background:var(--farm-accent); color:#fff; }
+    #farmCats li.active .cat-count { background:rgba(255,255,255,.25); color:#fff; }
+    .cat-count { background:var(--farm-chip); color:var(--farm-muted); font-size:.74rem; font-weight:700; padding:2px 9px; border-radius:999px; min-width:22px; text-align:center; }
+
+    .farm-stats { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+    .farm-stat { background:var(--farm-card); border:1px solid var(--farm-line); border-radius:14px; padding:10px 16px; }
+    .farm-stat b { font-size:1.3rem; color:var(--farm-accent-dark); display:block; }
+    .farm-stat span { font-size:.8rem; color:var(--farm-muted); }
+
+    #farmMap { height:340px; border-radius:18px; margin-bottom:18px; border:1px solid var(--farm-line); }
+
+    .farm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; }
+    .farm-card { background:var(--farm-card); border:1px solid var(--farm-line); border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:9px; transition:transform .18s, box-shadow .18s; }
+    .farm-card:hover { transform:translateY(-4px); box-shadow:0 14px 30px rgba(60,53,43,.10); }
+    .farm-card h3 { margin:0; font-size:1.12rem; color:var(--farm-accent-dark); letter-spacing:-.01em; }
+    .farm-card .farm-cat { font-size:.74rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--farm-terra); }
+    .farm-card .farm-summary { font-size:.9rem; line-height:1.5; color:var(--farm-text); margin:0; }
+    .farm-card .farm-meta { font-size:.85rem; color:var(--farm-muted); display:flex; flex-direction:column; gap:3px; }
+    .farm-card .farm-meta a { color:var(--farm-accent-dark); font-weight:600; text-decoration:none; }
+    .farm-card .farm-meta a:hover { text-decoration:underline; }
+    .farm-approx { font-style:italic; }
+    .farm-tags { display:flex; flex-wrap:wrap; gap:5px; }
+    .farm-tag { background:var(--farm-chip); color:var(--farm-accent-dark); font-size:.72rem; font-weight:600; padding:3px 9px; border-radius:999px; }
+    .farm-links { display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; padding-top:4px; }
+    .farm-links a { flex:1; text-align:center; padding:9px 10px; border-radius:10px; font-size:.84rem; font-weight:600; text-decoration:none; transition:background .12s; white-space:nowrap; }
+    .farm-links .lk-site { background:var(--farm-accent); color:#fff; }
+    .farm-links .lk-site:hover { background:var(--farm-accent-dark); }
+    .farm-links .lk-map { background:var(--farm-chip); color:var(--farm-accent-dark); }
+    .farm-links .lk-map:hover { background:#e2e8d8; }
+    #farmEmpty { text-align:center; color:var(--farm-muted); padding:40px; }
+    .farm-disclaimer { font-size:.8rem; color:var(--farm-muted); line-height:1.5; margin-top:22px; }
+    .farm-scrim { display:none; }
+
+    @media (max-width:860px){
+      .farm-layout { grid-template-columns:1fr; }
+      .farm-drawer-btn { display:block; }
+      .farm-sidebar { position:fixed; top:0; left:0; bottom:0; width:280px; max-width:84vw; z-index:1001; border-radius:0 18px 18px 0; transform:translateX(-105%); transition:transform .25s ease; overflow-y:auto; box-shadow:0 0 40px rgba(0,0,0,.2); }
+      .farm-sidebar.open { transform:translateX(0); }
+      .farm-sidebar-head button { display:block; }
+      .farm-scrim.show { display:block; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:1000; }
+      #farmMap { height:260px; }
+    }
   </style>
 </head>
 <body>
 <header>
-  <h1>Tulsa Food Pantry &amp; Meal Program Directory</h1>
+  <h1>Tulsa Food &amp; Farm Directory</h1>
   <p>Interactive directory compiled from the Tulsa Library food resources list, the Food Bank of Eastern Oklahoma pantry finder and help pages, Cause IQ's Tulsa food distribution directory, and direct program websites for major providers.</p>
   <p class="small" style="opacity:.75;">Updated for this build: April 15, 2026. Always call ahead before visiting, because hours, residency rules, and appointment requirements can change.</p>
 </header>
 
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-view="pantries" type="button">🍴 Food Assistance</button>
+  <button class="tab" data-view="farms" type="button">🌾 Local Farms</button>
+</nav>
+
+<div id="view-pantries">
 <div class="wrap">
   <div class="stats" id="stats"></div>
   <div class="grid">
@@ -171,6 +248,30 @@
       <li>Cause IQ's Tulsa food distribution directory was used to make sure major Tulsa-area food organizations such as Community Food Bank of Eastern Oklahoma, Meals on Wheels of Metro Tulsa, Iron Gate Tulsa, Food On The Move, and Hunger Free Oklahoma were represented.</li>
       <li>Direct program sites were used when they gave clearer current service descriptions or addresses than directory pages.</li>
     </ul>
+  </div>
+</div>
+</div><!-- /view-pantries -->
+
+<div id="view-farms" hidden>
+  <div class="farm-wrap">
+    <div class="farm-toolbar">
+      <button class="farm-drawer-btn" id="farmFilterToggle" type="button">&#9776; Categories</button>
+      <input id="farmSearch" type="text" placeholder="Search farms, products, or towns&hellip;" />
+    </div>
+    <div class="farm-layout">
+      <div class="farm-scrim" id="farmScrim"></div>
+      <aside class="farm-sidebar" id="farmSidebar">
+        <div class="farm-sidebar-head">Categories <button id="farmSidebarClose" type="button" aria-label="Close">&times;</button></div>
+        <ul id="farmCats"></ul>
+      </aside>
+      <div class="farm-main">
+        <div class="farm-stats" id="farmStats"></div>
+        <div id="farmMap"></div>
+        <div class="farm-grid" id="farmGrid"></div>
+        <p id="farmEmpty" hidden>No farms match your search. Try a different category or term.</p>
+        <p class="farm-disclaimer">Local farm directory for the Tulsa region (about 50 miles). Seasons, hours, and product availability change often &mdash; check each farm's website or call before visiting.</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -341,6 +442,198 @@ backTop.addEventListener('click', ()=> window.scrollTo({ top:0, behavior:'smooth
 
 /* ── Go ── */
 refresh();
+
+/* ============================================================
+   LOCAL FARMS DIRECTORY
+   ------------------------------------------------------------
+   TO ADD A FARM: copy one object into the `farms` array below.
+     Required : name, website, city, lat, lon, categories[]
+     Optional : summary, products[], phone, address, zip, tags[]
+     approx:true  -> set when lat/lon is only the town center
+                     (no street address); the map pin + card are
+                     then labeled as an approximate area.
+   `categories` values MUST come from FARM_CATEGORIES (below) so
+   the sidebar filter and counts stay in sync. A farm can list
+   several categories.
+   ============================================================ */
+const FARM_CATEGORIES = ["Produce","Fruit & Orchard","Berries","Microgreens","Mushrooms","Flowers & Herbs","Beef","Pork","Poultry & Eggs","Lamb & Goat","Dairy","Honey & Bees","CSA / Boxes","U-Pick","Agritourism","Organic / Regenerative"];
+
+const farms = [
+  { name:"Basnett Farms", categories:["Microgreens","Flowers & Herbs","Organic / Regenerative"], summary:"USDA Certified Organic family farm specializing in microgreens and edible flowers, sold at the Tulsa Farmers' Market and online.", products:["Microgreens","Pea shoots","Edible flowers","Herbs"], website:"https://basnettfarms.com/", phone:"(918) 880-3276", city:"Tulsa", tags:["microgreens","organic","urban farm"], lat:36.1540, lon:-95.9928, approx:true },
+  { name:"Prairie Creek Farms", categories:["Beef","Pork","Poultry & Eggs","Organic / Regenerative"], summary:"80-acre regenerative farm west of Tulsa producing pasture-raised meats and eggs, with home delivery to the Tulsa region.", products:["Grass-fed beef","Berkshire pork","Pastured chicken","Eggs"], website:"https://prairiecreek.farm/", address:"24962 W 141st St S", city:"Kellyville", zip:"74039", tags:["regenerative","grass-fed","delivery"], lat:35.9483, lon:-96.2122 },
+  { name:"Robinson Ranch", categories:["Produce","Beef","Pork","Poultry & Eggs","CSA / Boxes","Organic / Regenerative"], summary:"Female-run regenerative farm and on-site farm store in Bixby selling its own produce, meat and eggs plus goods from 40+ local producers.", products:["Organic vegetables","Grass-fed beef","Pastured pork","Eggs","Microgreens"], website:"https://robinsonranchveggies.com/", address:"2505 E 141st St S", city:"Bixby", zip:"74008", tags:["food hub","regenerative","farm store"], lat:35.9492, lon:-95.8908 },
+  { name:"Greenwood Farms", categories:["Beef","Pork","Poultry & Eggs","Lamb & Goat"], summary:"Family farm (est. 1980) in Big Cabin raising pasture-based meats and free-range eggs with its own USDA processing, sold at the Tulsa Farmers' Market.", products:["Beef","Pork","Chicken","Turkey","Lamb","Goat","Eggs"], website:"https://www.facebook.com/GreenwoodFarms.74332/", phone:"(918) 783-5647", address:"32707 S 4360 Rd", city:"Big Cabin", zip:"74332", tags:["pastured","usda processed","meat"], lat:36.5380, lon:-95.2230, approx:true },
+  { name:"Livesay Orchards", categories:["Fruit & Orchard","Produce","U-Pick","Agritourism"], summary:"The largest peach orchard in Oklahoma, with 140+ acres in Porter plus other fruit, vegetables, a pumpkin patch and farm market.", products:["Peaches","Apples","Blackberries","Pumpkins","Sweet corn","Tomatoes"], website:"https://livesayorchards.com/", address:"39232 E 231st St S", city:"Porter", zip:"74454", tags:["orchard","peaches","pick-your-own"], lat:35.8413, lon:-95.5430 },
+  { name:"Knight Pecan Farms", categories:["Fruit & Orchard"], summary:"Family-owned pecan orchard (since 1986) in Creek County with a retail shop in southwest Tulsa selling new-crop pecans and pecan gifts.", products:["Pecans","Pecan candy","Pecan gifts"], website:"https://www.knightpecanfarms.com/", phone:"(918) 845-8811", address:"8408 S Elwood Ave", city:"Tulsa", zip:"74132", tags:["pecans","nuts","orchard"], lat:36.0398, lon:-96.0090 },
+  { name:"Tulsa Farm Lab", categories:["Produce","Organic / Regenerative"], summary:"A 15-acre urban production and teaching farm in north Tulsa (run by nonprofit RG Foods) growing nutrient-dense produce for food-access programs.", products:["Produce","Plant starts","Greenhouse seedlings"], website:"https://rgfoods.net/tulsa-farm-lab", phone:"(918) 346-3788", address:"330 W 41st St N", city:"Tulsa", zip:"74106", tags:["urban farm","nonprofit","education"], lat:36.2070, lon:-96.0050 },
+  { name:"Honey Creek Farm", categories:["Flowers & Herbs","Honey & Bees","Agritourism"], summary:"A 40-acre lavender farm south of Tulsa near Mounds growing 11+ varieties of lavender, with an on-site store and overnight cottages.", products:["Lavender","Lavender products","Honey"], website:"https://www.honeycreekfarm.com/", address:"8033 W 191st St S", city:"Mounds", zip:"74047", tags:["lavender","herbs","agritourism"], lat:35.8780, lon:-96.1180 },
+  { name:"Living Kitchen Farm & Dairy", categories:["Dairy","Produce","Agritourism"], summary:"A working farm near Depew offering multi-course farm-table dinners using ingredients grown, raised, or foraged on the property.", products:["Farm-table dinners","Pasture-raised meats","Garden produce","Dairy"], website:"https://www.livingkitchenfarm.com/", address:"25198 S 481st W Ave", city:"Depew", zip:"74028", tags:["farm-to-table","dinners","agritourism"], lat:35.7960, lon:-96.5050 },
+  { name:"Joe's Farm", categories:["Produce","Fruit & Orchard","Berries","U-Pick","Organic / Regenerative"], summary:"Long-running certified-organic farm and you-pick operation in Bixby owned by chef Joe Tierney, with a retail store and pick-your-own berries.", products:["Organic produce","Berries (u-pick)","Beef","Pork","Poultry","Baked goods"], website:"https://joesfarmok.com/", phone:"918-938-0077", address:"12811 S Sheridan Rd", city:"Bixby", zip:"74008", tags:["organic","u-pick","farm store"], lat:35.9486, lon:-95.9069 },
+  { name:"Three Springs Farm", categories:["Produce","CSA / Boxes","Organic / Regenerative"], summary:"Certified-organic CSA farm in the Ozark hills near Oaks growing 30+ crops; sells exclusively via a free-choice CSA with weekly Tulsa pickups.", products:["Certified organic vegetables","CSA shares"], website:"https://threespringsfarm.com/", city:"Oaks", zip:"74359", tags:["certified organic","csa","vegetables"], lat:36.1817, lon:-94.8541, approx:true },
+  { name:"Resilient Growers", categories:["Produce","Flowers & Herbs","Organic / Regenerative"], summary:"Small family farm in Skiatook using regenerative practices to grow 30+ seasonal vegetables, herbs and flowers, sold at the Tulsa Farmers' Market.", products:["Seasonal vegetables","Herbs","Flowers","Plant starts"], website:"https://www.facebook.com/resilientgrowers/", city:"Skiatook", zip:"74070", tags:["regenerative","vegetables"], lat:36.3681, lon:-96.0014, approx:true },
+  { name:"Shepherd's Cross", categories:["Lamb & Goat","Beef","Poultry & Eggs","Honey & Bees","Produce","Agritourism"], summary:"Working sheep & cattle farm and Christian agritourism destination north of Claremore with a farm store, wool mill, and pasture-raised lamb and beef.", products:["Grass-fed lamb","Grass-fed beef","Eggs","Honey","Wool","Pecans"], website:"https://shepherdscross.com/", phone:"918-342-5911", address:"16792 E 450 Rd", city:"Claremore", zip:"74017", tags:["sheep","wool","animal welfare approved","farm store"], lat:36.3526, lon:-95.6486, approx:true },
+  { name:"Prairie's End", categories:["Produce","Organic / Regenerative","Agritourism"], summary:"Family-owned 40-acre permaculture homestead near Lake Keystone with a certified-organic no-till garden, food forest, seasonal market and lodging.", products:["Heirloom tomatoes","Watermelons","Peas","Potatoes","Homemade jams"], website:"https://prairiesend.org/", phone:"918-697-8071", address:"549 County Rd 1577", city:"Osage", zip:"74054", tags:["permaculture","food forest","organic"], lat:36.2289, lon:-96.3286, approx:true },
+  { name:"The Peach Barn - Orchard & Bakery", categories:["Fruit & Orchard","Produce","Agritourism"], summary:"Historic peach orchard and farm-market bakery near Porter at Hwys 69 & 51B, with fried pies, ice cream and seasonal fruit.", products:["Peaches","Apples","Pumpkins","Jams","Honey","Fried pies","Cobblers"], website:"https://thepeachbarn.com/", phone:"918-686-0440", address:"3557 W State Hwy 51B", city:"Porter", zip:"74454", tags:["orchard","peaches","bakery"], lat:35.8497, lon:-95.5236 },
+  { name:"Oklahoma Honey", categories:["Honey & Bees"], summary:"Tulsa-based local honey producer offering raw Oklahoma honey, with its own shop and verified Tulsa address.", products:["Raw honey","Local honey"], website:"https://oklahomahoney.org/", phone:"(918) 813-2424", address:"2949 S 137th E Pl", city:"Tulsa", zip:"74134", tags:["honey","bees","apiary"], lat:36.1245, lon:-95.8312 },
+  { name:"Okie Bee Farms", categories:["Honey & Bees"], summary:"Small Tulsa-based honey-bee products business selling raw honey and bee-derived goods sourced as locally as possible.", products:["Raw honey","Comb honey","Beeswax candles","Pollen","Soap"], website:"https://www.facebook.com/okiebeefarms", phone:"(918) 855-8682", address:"4004 E 24th Pl", city:"Tulsa", zip:"74114", tags:["honey","bees","beeswax"], lat:36.1278, lon:-95.9430 },
+  { name:"High On A Hill Dairy Goats", categories:["Lamb & Goat","Dairy","Agritourism"], summary:"Small 25-acre farm in Kellyville raising dairy goats plus mini Highland cows and Kunekune pigs, known for goat yoga and animal-cuddling experiences.", products:["Dairy goats","Goat yoga","Cow cuddling","Farm experiences"], website:"https://www.highonahilldairygoats.com/", phone:"(918) 841-9951", address:"15362 S 217th W Ave", city:"Kellyville", zip:"74039", tags:["goats","agritourism","goat yoga"], lat:35.9380, lon:-96.2480, approx:true },
+  { name:"Sloth Acres", categories:["Poultry & Eggs","Pork","Microgreens","CSA / Boxes"], summary:"78-acre pasture-based farm near Bristow producing pastured poultry, duck eggs, forest-raised pork and microgreens; runs a CSA May–Nov.", products:["Pastured chicken","Duck eggs","Forest-raised pork","Microgreens"], website:"https://www.facebook.com/people/Sloth-Acres/100069950386694/", city:"Bristow", zip:"74010", tags:["csa","pastured","eggs"], lat:35.8302, lon:-96.3909, approx:true },
+  { name:"The Oklahoma Mushroom Company", categories:["Mushrooms"], summary:"Specialty mushroom grower (OKMushCo) cultivating 16+ varieties including Lion's Mane, Reishi and oyster; sells at the Tulsa Farmers' Market.", products:["Fresh mushrooms","Dried mushrooms","Tinctures","Grow kits"], website:"https://okmushco.com/", phone:"(918) 861-1354", address:"322 W C Rogers Blvd", city:"Skiatook", zip:"74070", tags:["mushrooms","specialty crops"], lat:36.3686, lon:-96.0072 },
+  { name:"The Flower Meadow", categories:["Flowers & Herbs","U-Pick","Agritourism"], summary:"U-pick cut-flower farm on ~4 acres in Coweta where guests pick bouquets and join flower-arranging experiences; also an event venue.", products:["U-pick cut flowers","Bouquets","Flower arranging experiences"], website:"https://www.theflowermeadowupick.com/", phone:"(918) 770-5165", address:"27304 E 151st St S", city:"Coweta", zip:"74429", tags:["flowers","u-pick","agritourism"], lat:35.9210, lon:-95.7460 },
+  { name:"Owasso Christmas Tree and Berry Farm", categories:["Berries","U-Pick","Agritourism"], summary:"Family-owned farm offering you-pick blueberries and blackberries in summer and you-cut Christmas trees in winter, plus hayrides.", products:["You-pick blueberries","You-pick blackberries","Christmas trees","Wreaths"], website:"https://www.owassotree.farm/", phone:"(918) 272-9445", address:"10939 N 129th E Ave", city:"Owasso", zip:"74055", tags:["berries","u-pick","christmas trees"], lat:36.2960, lon:-95.8060 },
+  { name:"Peace of Prairie", categories:["Produce","Flowers & Herbs","Organic / Regenerative"], summary:"21-acre USDA certified-organic farm just outside Muskogee growing produce, cut flowers and transplants, with a self-service farm stand.", products:["Organic vegetables","Cut flowers","Transplants","Eggs"], website:"https://www.peaceofprairie.com/", address:"6221 W Okmulgee Ave", city:"Muskogee", zip:"74401", tags:["certified organic","produce","cut flowers"], lat:35.7407, lon:-95.4413 },
+  { name:"Outwest Farms", categories:["Beef","Pork","Poultry & Eggs"], summary:"Second-generation Pawnee County family farm selling grass-fed beef and pasture-raised pork, chicken and turkey with Friday deliveries to Tulsa.", products:["Grass-fed beef","Pasture-raised pork","Chicken","Turkey"], website:"https://outwestfarmsok.com/", phone:"918-358-1023", address:"50634 S 36300 Rd", city:"Cleveland", zip:"74020", tags:["grass-fed","pasture-raised","delivery"], lat:36.3115, lon:-96.4661, approx:true },
+  { name:"Grassroots Ranch", categories:["Beef","Pork","Poultry & Eggs","Organic / Regenerative"], summary:"Rose family beyond-organic farm in Porter raising grass-fed beef, forested pork and pastured chicken with next-day home delivery across the Tulsa metro.", products:["Grass-fed beef","Forested pork","Pastured chicken"], website:"https://www.facebook.com/grassrootstulsa/", address:"42663 E 181st St", city:"Porter", zip:"74454", tags:["grass-fed","regenerative","delivery"], lat:35.8537, lon:-95.5219, approx:true },
+  { name:"Graham Acres", categories:["Poultry & Eggs","Pork","Lamb & Goat","Organic / Regenerative"], summary:"Northeast Oklahoma regenerative family farm in Pryor offering pasture-raised chicken, pork, lamb and eggs with free delivery to Mayes and Tulsa counties.", products:["Pasture-raised chicken","Pork","Lamb","Eggs"], website:"https://www.graham-acres.com/", phone:"918-698-0743", address:"386 N 4295", city:"Pryor", zip:"74361", tags:["pasture-raised","regenerative","delivery"], lat:36.3084, lon:-95.3169, approx:true },
+  { name:"413 Farm", categories:["Beef","Pork","Poultry & Eggs","Lamb & Goat"], summary:"USDA-inspected family farm in Adair (Mayes County) raising grass-fed beef and lamb plus non-GMO pasture-raised poultry, pork, goat and turkey.", products:["Grass-fed beef","Lamb","Pork","Chicken","Goat","Turkey"], website:"https://www.413farm.com/", phone:"817-500-7010", address:"11000 N 430 Rd", city:"Adair", zip:"74330", tags:["grass-fed","non-gmo","usda inspected"], lat:36.4362, lon:-95.2697, approx:true },
+  { name:"Harper Farm", categories:["Pork","Beef"], summary:"Ramona family farm producing premium pasture-raised pork and Angus beef free of antibiotics and added hormones, sold by the quarter, half or whole.", products:["Pasture-raised pork","Angus beef"], website:"https://harperfarm.com/", phone:"918-440-2298", city:"Ramona", zip:"74061", tags:["pasture-raised","pork","beef"], lat:36.5331, lon:-95.9214, approx:true },
+  { name:"Tallgrass Heritage", categories:["Beef","Organic / Regenerative"], summary:"Fifth-generation operation producing 100% grass-fed, dry-aged beef from 8,000 acres of Osage County tallgrass prairie, delivered in the Tulsa area.", products:["Grass-fed beef","Beef cowshares"], website:"https://www.tallgrassheritage.com/", phone:"918-928-8058", city:"Osage County", tags:["grass-fed","dry-aged","delivery"], lat:36.6700, lon:-96.3361, approx:true },
+  { name:"Swan Bros. Dairy", categories:["Dairy"], summary:"Family-owned, fourth-generation dairy farm in Claremore with a farm store selling fresh milk and handcrafted artisan cheeses.", products:["Fresh milk","Handcrafted cheese","Cheese curds"], website:"https://swandairy.com/", phone:"(918) 341-2298", address:"938 E 5th St", city:"Claremore", zip:"74017", tags:["dairy","cheese","milk","farm store"], lat:36.3126, lon:-95.6075 },
+  { name:"Saltgrass Dairy", categories:["Dairy"], summary:"Grass-fed, pasture-raised A2/A2 Guernsey dairy in Bristow selling all-natural raw milk directly off the farm.", products:["Raw A2/A2 milk","Cream"], website:"https://www.facebook.com/saltgrassdairyok/", phone:"(717) 609-3835", address:"35101 S Hwy 48", city:"Bristow", zip:"74010", tags:["dairy","raw milk","grass-fed"], lat:35.8302, lon:-96.3909, approx:true },
+  { name:"Our Farm", categories:["Dairy","Poultry & Eggs"], summary:"Small Tulsa dairy selling farm-fresh milk, cheese, cream and eggs directly from their location in west Tulsa.", products:["Fresh milk","Cheese","Cream","Eggs"], website:"https://www.facebook.com/ourfarmtulsa/", phone:"(918) 640-1282", address:"7604 W 51st St", city:"Tulsa", zip:"74107", tags:["dairy","milk","eggs"], lat:36.0875, lon:-96.0470 },
+  { name:"Roark Acres Honey Farms", categories:["Honey & Bees"], summary:"Family-owned apiary running ~1,500 hives across the Tulsa area, with a Honey House and general store in Jenks.", products:["Raw honey","Creamed honey","Honeycomb","Beeswax candles","Beekeeping supplies"], website:"https://www.roarkacres.com/", phone:"918-578-9201", address:"217 E Main St", city:"Jenks", zip:"74037", tags:["honey","bees","store"], lat:36.0234, lon:-95.9683 },
+  { name:"RJS Bee Farm (Owasso Bee Guy)", categories:["Honey & Bees"], summary:"Owasso-based bee farm selling pure unprocessed honey and bee products, beehives and beekeeping equipment, with online order and local pickup.", products:["Raw honey","Beehives","Beekeeping equipment","Bee colonies"], website:"https://owassobeeguy.com/", phone:"918-274-3822", city:"Owasso", zip:"74055", tags:["honey","bees","beekeeping supplies"], lat:36.2695, lon:-95.8547, approx:true },
+  { name:"Thunderbird Berry Farm", categories:["Berries","Fruit & Orchard","U-Pick"], summary:"Family-owned, three-generation pick-your-own berry farm in Broken Arrow (since 2005) growing pesticide-free berries.", products:["Blueberries","Strawberries","Blackberries","Raspberries","Honey","Eggs"], website:"https://www.thunderbirdberry.com/", phone:"918-640-7168", address:"32100 E 71st St S", city:"Broken Arrow", zip:"74014", tags:["u-pick","berries","pesticide-free"], lat:36.0561, lon:-95.5736, approx:true },
+  { name:"Endicott Farms", categories:["Berries","Fruit & Orchard","U-Pick"], summary:"Family-friendly 35-acre u-pick blueberry and blackberry farm about 30 minutes south of Tulsa in Mounds; also sells Kanza pecans.", products:["Blueberries","Blackberries","Pecans"], website:"https://www.endicottfarms.com/", phone:"918-344-4582", city:"Mounds", zip:"74047", tags:["u-pick","berries","pecans"], lat:35.8784, lon:-96.0586, approx:true },
+  { name:"Fisher's Produce", categories:["Produce","CSA / Boxes","Organic / Regenerative"], summary:"Certified-organic family vegetable farm in Bristow (100+ years farming) running a CSA with weekly deliveries to Tulsa, Bristow and Beggs.", products:["Sweet corn","Tomatoes","Asparagus","Leafy greens","Strawberries"], website:"https://www.fishersproduce.com/", phone:"918-639-0244", city:"Bristow", zip:"74010", tags:["csa","certified organic","delivery"], lat:35.8307, lon:-96.3920, approx:true },
+  { name:"Bootstrap Farm", categories:["Produce","CSA / Boxes"], summary:"Chemical-free diversified farm in Yale growing 70+ produce varieties; runs a CSA with pickup at the Cherry Street Farmers' Market in Tulsa.", products:["Greens","Beets","Carrots","Cucumbers","Strawberries","Melons"], website:"https://www.facebook.com/bootstrapfarm/", phone:"405-323-0619", address:"21117 E 44th St", city:"Yale", zip:"74085", tags:["csa","chemical-free","farmers market"], lat:36.1059, lon:-96.5708, approx:true },
+  { name:"Alchemy Gardens", categories:["Mushrooms","Microgreens","Produce"], summary:"Urban micro-farm in Tulsa growing gourmet mushrooms, microgreens and seasonal vegetables for local pickup and delivery.", products:["Lion's mane","Oyster mushrooms","Shiitake","Microgreens","Seasonal vegetables"], website:"https://alchemygardensok.com/", city:"Tulsa", tags:["mushrooms","microgreens","urban farm"], lat:36.1540, lon:-95.9928, approx:true },
+  { name:"Fox & Folly Farm", categories:["Flowers & Herbs","U-Pick"], summary:"Flower farm and creative destination in Owasso offering u-pick flowers, bouquet subscriptions, a boutique and greenhouse event space.", products:["Cut flowers","U-pick flowers","Bouquet subscriptions"], website:"https://foxandfollyfarm.com/", city:"Owasso", zip:"74055", tags:["flowers","u-pick","subscriptions"], lat:36.2695, lon:-95.8547, approx:true },
+  { name:"Coram Deo Flower Farm", categories:["Flowers & Herbs"], summary:"Specialty cut-flower farm just outside Tulsa in Claremore selling fresh locally grown bouquets via a drive-through flower stand.", products:["Sunflowers","Zinnias","Cut flowers","Bouquets"], website:"https://coramdeofarm.com/", address:"13602 E 450 Rd", city:"Claremore", zip:"74017", tags:["flowers","cut flowers","farm stand"], lat:36.2375, lon:-95.5400 },
+  { name:"Owasso Flower Farm", categories:["Flowers & Herbs","U-Pick"], summary:"U-pick heirloom flower farm and photography location in Owasso hosting small-group sessions; also grows seasonal vegetables.", products:["Heirloom flowers","U-pick flowers","Seasonal vegetables"], website:"https://www.owassoflowerfarm.com/", city:"Owasso", zip:"74055", tags:["flowers","u-pick","heirloom"], lat:36.2695, lon:-95.8547, approx:true },
+  { name:"Thompson Acres", categories:["Produce","Berries","U-Pick"], summary:"Family u-pick strawberry patch and farm market in Oologah growing strawberries, tomatoes and vegetables, with on-farm honey and eggs.", products:["Strawberries","Tomatoes","Vegetables","Honey","Eggs"], website:"https://www.facebook.com/p/Thompson-Acres-100031348584335/", phone:"918-521-9467", address:"13506 S 4090 Rd", city:"Oologah", zip:"74053", tags:["u-pick","strawberries","farm market"], lat:36.4456, lon:-95.7083 },
+  { name:"Breisch Garden", categories:["Produce","U-Pick","Organic / Regenerative"], summary:"Small u-pick organic vegetable garden in Sand Springs.", products:["Organic vegetables","U-pick produce"], website:"https://www.gbreisch.com/", phone:"918-261-4279", address:"3001 S 137th W Ave", city:"Sand Springs", zip:"74063", tags:["u-pick","organic","garden"], lat:36.1140, lon:-96.1530 }
+];
+
+/* ── Farm DOM refs ── */
+const farmGrid = document.getElementById('farmGrid');
+const farmCatsEl = document.getElementById('farmCats');
+const farmSearch = document.getElementById('farmSearch');
+const farmStatsEl = document.getElementById('farmStats');
+const farmEmpty = document.getElementById('farmEmpty');
+const farmSidebar = document.getElementById('farmSidebar');
+const farmScrim = document.getElementById('farmScrim');
+let farmActiveCat = 'All Farms';
+let farmMap = null, farmMarkers = [], farmMapInited = false;
+
+const farmIcon = L.divIcon({
+  className: '',
+  html: `<svg width="26" height="38" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.268 21.732 0 14 0z" fill="#c06f4c"/><circle cx="14" cy="14" r="6" fill="white"/></svg>`,
+  iconSize: [26, 38], iconAnchor: [13, 38], popupAnchor: [0, -34]
+});
+
+function farmCounts(){
+  const counts = {}; FARM_CATEGORIES.forEach(c => counts[c] = 0);
+  farms.forEach(f => f.categories.forEach(c => { if (counts[c] != null) counts[c]++; }));
+  return counts;
+}
+function renderFarmCats(){
+  const counts = farmCounts();
+  const items = [['All Farms', farms.length], ...FARM_CATEGORIES.filter(c => counts[c] > 0).map(c => [c, counts[c]])];
+  farmCatsEl.innerHTML = items.map(([c, n]) =>
+    `<li data-cat="${c}" class="${c === farmActiveCat ? 'active' : ''}">${c}<span class="cat-count">${n}</span></li>`).join('');
+}
+function farmFiltered(){
+  const q = farmSearch.value.toLowerCase().trim();
+  return farms.filter(f => {
+    if (farmActiveCat !== 'All Farms' && !f.categories.includes(farmActiveCat)) return false;
+    if (!q) return true;
+    const blob = `${f.name} ${f.city} ${f.summary || ''} ${(f.products || []).join(' ')} ${(f.tags || []).join(' ')} ${f.categories.join(' ')}`.toLowerCase();
+    return blob.includes(q);
+  });
+}
+function farmMapsLink(f){
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((f.address ? f.address + ', ' : '') + f.city + ', OK')}`;
+}
+function renderFarmCards(list){
+  farmEmpty.hidden = list.length > 0;
+  farmGrid.innerHTML = list.map(f => {
+    const meta = [];
+    if (f.address) meta.push(`<span>&#128205; ${f.address}, ${f.city}${f.zip ? ' ' + f.zip : ''}</span>`);
+    else meta.push(`<span>&#128205; ${f.city}, OK ${f.approx ? '<span class="farm-approx">(area)</span>' : ''}</span>`);
+    if (f.phone) meta.push(`<span>&#128222; <a href="tel:${f.phone.replace(/[^0-9]/g,'')}">${f.phone}</a></span>`);
+    const prod = (f.products && f.products.length) ? `<p class="farm-summary"><strong>Sells:</strong> ${f.products.slice(0,6).join(', ')}</p>` : '';
+    const tags = (f.tags && f.tags.length) ? `<div class="farm-tags">${f.tags.slice(0,5).map(t => `<span class="farm-tag">${t}</span>`).join('')}</div>` : '';
+    return `<article class="farm-card">
+      <div class="farm-cat">${f.categories[0]}</div>
+      <h3>${f.name}</h3>
+      ${f.summary ? `<p class="farm-summary">${f.summary}</p>` : ''}
+      ${prod}
+      <div class="farm-meta">${meta.join('')}</div>
+      ${tags}
+      <div class="farm-links">
+        <a class="lk-site" href="${f.website}" target="_blank" rel="noreferrer">Website &#8599;</a>
+        <a class="lk-map" href="${farmMapsLink(f)}" target="_blank" rel="noreferrer">Map &#8599;</a>
+      </div>
+    </article>`;
+  }).join('');
+}
+function renderFarmMap(list){
+  if (!farmMap) return;
+  farmMarkers.forEach(m => farmMap.removeLayer(m)); farmMarkers = [];
+  const bounds = [];
+  list.forEach(f => {
+    if (f.lat == null || f.lon == null) return;
+    const m = L.marker([f.lat, f.lon], { icon: farmIcon }).addTo(farmMap).bindPopup(
+      `<strong>${f.name}</strong><br>${f.address ? f.address + '<br>' : ''}${f.city}, OK${f.approx ? ' <em>(approx.)</em>' : ''}<br><a href="${f.website}" target="_blank" rel="noreferrer" style="color:#42563a;font-weight:600;">Website &#8599;</a>`);
+    farmMarkers.push(m); bounds.push([f.lat, f.lon]);
+  });
+  if (bounds.length) farmMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 11 });
+}
+function renderFarmStats(list){
+  const towns = new Set(list.map(f => f.city)).size;
+  farmStatsEl.innerHTML = `
+    <div class="farm-stat"><b>${list.length}</b><span>farms shown</span></div>
+    <div class="farm-stat"><b>${towns}</b><span>towns</span></div>
+    <div class="farm-stat"><b>${FARM_CATEGORIES.length}</b><span>categories</span></div>`;
+}
+function refreshFarms(){
+  const list = farmFiltered();
+  renderFarmStats(list);
+  renderFarmCards(list);
+  renderFarmMap(list);
+}
+
+/* ── Farm drawer (mobile) ── */
+function openFarmDrawer(){ farmSidebar.classList.add('open'); farmScrim.classList.add('show'); }
+function closeFarmDrawer(){ farmSidebar.classList.remove('open'); farmScrim.classList.remove('show'); }
+
+/* ── Farm events ── */
+farmCatsEl.addEventListener('click', e => {
+  const li = e.target.closest('li'); if (!li) return;
+  farmActiveCat = li.dataset.cat;
+  renderFarmCats();
+  refreshFarms();
+  closeFarmDrawer();
+});
+farmSearch.addEventListener('input', refreshFarms);
+document.getElementById('farmFilterToggle').addEventListener('click', openFarmDrawer);
+document.getElementById('farmSidebarClose').addEventListener('click', closeFarmDrawer);
+farmScrim.addEventListener('click', closeFarmDrawer);
+renderFarmCats();
+refreshFarms();
+
+/* ── Tab switching ── */
+const viewPantries = document.getElementById('view-pantries');
+const viewFarms = document.getElementById('view-farms');
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const isFarms = btn.dataset.view === 'farms';
+    viewFarms.hidden = !isFarms;
+    viewPantries.hidden = isFarms;
+    document.body.classList.toggle('farms-active', isFarms);
+    if (isFarms && !farmMapInited) {
+      farmMap = L.map('farmMap').setView([36.1, -95.9], 9);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(farmMap);
+      farmMapInited = true;
+      refreshFarms();
+    }
+    if (isFarms) setTimeout(() => farmMap.invalidateSize(), 60);
+    window.scrollTo({ top: 0 });
+  });
+});
 </script>
 </body>
 </html>
