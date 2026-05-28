@@ -148,6 +148,9 @@
     .farm-links .lk-site:hover { background:var(--farm-accent-dark); }
     .farm-links .lk-map { background:var(--farm-chip); color:var(--farm-accent-dark); }
     .farm-links .lk-map:hover { background:#e2e8d8; }
+    .farm-social { display:flex; gap:14px; flex-wrap:wrap; font-size:.82rem; }
+    .farm-social a { color:var(--farm-accent-dark); font-weight:600; text-decoration:none; }
+    .farm-social a:hover { text-decoration:underline; }
     #farmEmpty { text-align:center; color:var(--farm-muted); padding:40px; }
     .farm-disclaimer { font-size:.8rem; color:var(--farm-muted); line-height:1.5; margin-top:22px; }
     .farm-scrim { display:none; }
@@ -586,6 +589,83 @@ const farms = [
   { name:"Pullen Peaches", categories:["Fruit & Orchard"], summary:"Family-owned peach orchard near Stratford, Oklahoma's peach country. (~125 mi southwest of Tulsa.)", products:["Peaches"], website:"https://www.facebook.com/PullenPeaches/", city:"Stratford", zip:"74872", tags:["orchard","peaches","family farm"], lat:34.7965, lon:-96.9603, approx:true }
 ];
 
+/* ── Social pages (Facebook / Instagram), merged onto farms by name ──
+   Only farms whose Facebook differs from their website have an fb here (cards
+   skip a Facebook link that would just duplicate the Website button). To add
+   socials for a new farm you can also set fb:"" / ig:"" directly on its object. */
+const FARM_SOCIAL = {
+  "Basnett Farms": { fb:"https://www.facebook.com/basnett.farms/", ig:"https://www.instagram.com/farmerbasnett/" },
+  "Prairie Creek Farms": { fb:"https://www.facebook.com/PrairieCreekFarms/", ig:"https://www.instagram.com/prairiecreekfarms/" },
+  "Robinson Ranch": { fb:"https://www.facebook.com/robinsonranchveggies/", ig:"https://www.instagram.com/the_robinson_ranch/" },
+  "Livesay Orchards": { fb:"https://www.facebook.com/LivesayOrchards", ig:"https://www.instagram.com/livesayorchards/" },
+  "Knight Pecan Farms": { fb:"https://www.facebook.com/KnightPecanFarms", ig:"https://www.instagram.com/knightpecanfarms/" },
+  "Honey Creek Farm": { fb:"https://www.facebook.com/Skiphoneyman/" },
+  "Living Kitchen Farm & Dairy": { fb:"https://www.facebook.com/LivingKitchen/" },
+  "Joe's Farm": { fb:"https://www.facebook.com/JoesFarmBixby/", ig:"https://www.instagram.com/joesfarmbixby/" },
+  "Three Springs Farm": { fb:"https://www.facebook.com/3springsfarm/", ig:"https://www.instagram.com/threespringsfarmers/" },
+  "Resilient Growers": { ig:"https://www.instagram.com/resilientgrowersfarm/" },
+  "Shepherd's Cross": { fb:"https://www.facebook.com/ShepherdsCross/", ig:"https://www.instagram.com/shepherds_cross/" },
+  "Prairie's End": { fb:"https://www.facebook.com/PrairiesEnd/", ig:"https://www.instagram.com/prairiesend/" },
+  "The Peach Barn - Orchard & Bakery": { fb:"https://www.facebook.com/203061479751331", ig:"https://www.instagram.com/thepeachbarnorchardandbakery/" },
+  "Oklahoma Honey": { ig:"https://www.instagram.com/oklahomahoney/" },
+  "Okie Bee Farms": { ig:"https://www.instagram.com/okiebeefarms/" },
+  "High On A Hill Dairy Goats": { fb:"https://www.facebook.com/highonahilldairygoats/", ig:"https://www.instagram.com/highonahilldairygoats/" },
+  "The Oklahoma Mushroom Company": { fb:"https://www.facebook.com/OkMushCo/", ig:"https://www.instagram.com/okmushco/" },
+  "The Flower Meadow": { fb:"https://www.facebook.com/TheFlowerMeadowUPick/", ig:"https://www.instagram.com/theflowermeadow/" },
+  "Owasso Christmas Tree and Berry Farm": { fb:"https://www.facebook.com/OwassoTreeFarm/", ig:"https://www.instagram.com/owassotreefarm/" },
+  "Peace of Prairie": { fb:"https://www.facebook.com/PeaceOfPrairie/", ig:"https://www.instagram.com/peaceofprairieorganicfarm/" },
+  "Outwest Farms": { fb:"https://www.facebook.com/Outwestfarms/", ig:"https://www.instagram.com/outwestfarm/" },
+  "Grassroots Ranch": { ig:"https://www.instagram.com/grassrootstulsa/" },
+  "Graham Acres": { fb:"https://www.facebook.com/grahamacresok/", ig:"https://www.instagram.com/grahamacresok/" },
+  "413 Farm": { fb:"https://www.facebook.com/413Farm/", ig:"https://www.instagram.com/413farm/" },
+  "Tallgrass Heritage": { fb:"https://www.facebook.com/tallgrassheritage/", ig:"https://www.instagram.com/tallgrassheritage/" },
+  "Swan Bros. Dairy": { fb:"https://www.facebook.com/SwanBrosDairyInc/", ig:"https://www.instagram.com/swanbrosdairy/" },
+  "Roark Acres Honey Farms": { fb:"https://www.facebook.com/RoarkAcres/", ig:"https://www.instagram.com/roark_acres/" },
+  "RJS Bee Farm (Owasso Bee Guy)": { fb:"https://www.facebook.com/owassobeeguy/" },
+  "Thunderbird Berry Farm": { fb:"https://www.facebook.com/thunderbirdberryfarm/", ig:"https://www.instagram.com/thunderbirdberryfarm/" },
+  "Endicott Farms": { fb:"https://www.facebook.com/EndicottFarms/", ig:"https://www.instagram.com/endicottfarmsok/" },
+  "Fisher's Produce": { fb:"https://www.facebook.com/FishersProduce/", ig:"https://www.instagram.com/fishersproduce/" },
+  "Alchemy Gardens": { fb:"https://www.facebook.com/AlchemyGardensOk/" },
+  "Fox & Folly Farm": { fb:"https://www.facebook.com/people/Fox-Folly-Farm/61574643971457/", ig:"https://www.instagram.com/foxandfollyfarm/" },
+  "Coram Deo Flower Farm": { fb:"https://www.facebook.com/coramdeoflowers/", ig:"https://www.instagram.com/coramdeoflowers/" },
+  "Owasso Flower Farm": { fb:"https://www.facebook.com/p/Owasso-Flower-Farm-100085930568249/" },
+  "Breisch Garden": { fb:"https://www.facebook.com/GaryWilliamBreisch/" },
+  "Heaven Sent Food & Fiber": { fb:"https://www.facebook.com/HeavenSentFoodandFiber/", ig:"https://www.instagram.com/heavensentfoodandfiberllc/" },
+  "Rare Breed Farms": { ig:"https://www.instagram.com/rarebreedfarms/" },
+  "Single Loop Ranch": { fb:"https://www.facebook.com/p/Single-Loop-Ranch-100048675116804/" },
+  "Maple Creek Berry Farm": { fb:"https://www.facebook.com/maplecreekberryfarm/" },
+  "Hill Farm": { fb:"https://www.facebook.com/hillfarmok/" },
+  "9 West Ranch Beef": { fb:"https://www.facebook.com/ninewestranchbeef/", ig:"https://www.instagram.com/9westranchbeef/" },
+  "Duchess Creek Farms": { fb:"https://www.facebook.com/PhilippiCattleCompany/", ig:"https://www.instagram.com/duchesscreekfarms/" },
+  "EZ Angus Beef": { fb:"https://www.facebook.com/EZangus/", ig:"https://www.instagram.com/ezangusbeef/" },
+  "The Heirloom Acre": { fb:"https://www.facebook.com/theheirloomacrefarm/", ig:"https://www.instagram.com/theheirloomacrefarm/" },
+  "Coats Family Beef": { fb:"https://www.facebook.com/p/Coats-Family-Beef-100036310129953/" },
+  "Cultivate Flower Farm": { fb:"https://www.facebook.com/p/Cultivate-Flower-Farm-100090733743864/", ig:"https://www.instagram.com/cultivateflowerfarm/" },
+  "Yarrowhead Farms": { fb:"https://www.facebook.com/yhfmarket/", ig:"https://www.instagram.com/yarrowhead_farms/" },
+  "Prairie Thyme Farm": { fb:"https://www.facebook.com/prairiethymefarm/" },
+  "Central Oklahoma Honey": { fb:"https://www.facebook.com/472262286243320" },
+  "Stillwater Creek Farm": { fb:"https://www.facebook.com/people/Stillwater-Creek-Farms/100091983520766/", ig:"https://www.instagram.com/stillwatercreekfarms/" },
+  "Dunagan Farms": { fb:"https://www.facebook.com/DunaganFarmsOK/", ig:"https://www.instagram.com/dunagan_farms/" },
+  "C&C Farms (Cars and Cows)": { fb:"https://www.facebook.com/Carsandcows/" },
+  "Semkin Longhorns": { fb:"https://www.facebook.com/semkin.longhorns/" },
+  "Paige Farms Dairy Goats": { fb:"https://www.facebook.com/paigefarmsdairygoats/" },
+  "Morning View Farm": { fb:"https://www.facebook.com/MorningViewFarm/" },
+  "N40 Berries": { fb:"https://www.facebook.com/N40berries/", ig:"https://www.instagram.com/n40berries/" },
+  "Hoffman Pecan Farm": { fb:"https://www.facebook.com/HoffmanPecanFarm/" },
+  "Persimmon Hill Farm & Bakery": { fb:"https://www.facebook.com/persimmonhill/", ig:"https://www.instagram.com/persimmonhillfarmbakery/" },
+  "Drummond Ranch (Drummond Beef)": { fb:"https://www.facebook.com/p/The-Drummond-Ranch-100029110405204/", ig:"https://www.instagram.com/thedrummondranch/" },
+  "Osage County Beef": { fb:"https://www.facebook.com/osagebeef/", ig:"https://www.instagram.com/osagebeef/" },
+  "Mulberry Cattle Co.": { fb:"https://www.facebook.com/MulberryCattleCo/" },
+  "Crossover Cattle Company": { ig:"https://www.instagram.com/crossover_cattle_company/" },
+  "American Heritage Family Farm": { ig:"https://www.instagram.com/ahfamilyfarm/" },
+  "RLC Farm": { ig:"https://www.instagram.com/rlcfarm/" },
+  "Bee-Loved Honey": { fb:"https://www.facebook.com/BeeLovedBartlesvilleHoneyCo" },
+  "Chisholm Trail Milling": { fb:"https://www.facebook.com/chisholmtrailmilling/", ig:"https://www.instagram.com/chisholmtrailmilling/" },
+  "Creekside Berry Farm": { fb:"https://www.facebook.com/creeksideberryfarm/" },
+  "Real Ranch Grassfed": { fb:"https://www.facebook.com/p/Real-Ranch-Grassfed-100090139045479/", ig:"https://www.instagram.com/realranchgrassfed/" }
+};
+farms.forEach(f => { const s = FARM_SOCIAL[f.name]; if (s) { if (s.fb && !f.fb) f.fb = s.fb; if (s.ig && !f.ig) f.ig = s.ig; } });
+
 /* ── Farm DOM refs ── */
 const farmGrid = document.getElementById('farmGrid');
 const farmCatsEl = document.getElementById('farmCats');
@@ -675,6 +755,7 @@ function renderFarmCards(list){
         <a class="lk-site" href="${f.website}" target="_blank" rel="noreferrer">Website &#8599;</a>
         <a class="lk-map" href="${farmMapsLink(f)}" target="_blank" rel="noreferrer">Map &#8599;</a>
       </div>
+      ${(() => { const s = []; if (f.fb && f.fb !== f.website) s.push(`<a href="${f.fb}" target="_blank" rel="noreferrer">Facebook &#8599;</a>`); if (f.ig) s.push(`<a href="${f.ig}" target="_blank" rel="noreferrer">Instagram &#8599;</a>`); return s.length ? `<div class="farm-social">${s.join('')}</div>` : ''; })()}
       <div class="farm-track" data-idx="${idx}">
         <div class="track-row">
           <button class="track-visited${tr.visited ? ' on' : ''}" data-act="visited" type="button">${tr.visited ? '&#10003; Visited' : 'Mark visited'}</button>
