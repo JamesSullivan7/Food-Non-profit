@@ -122,6 +122,15 @@
     #farmCats li.active { background:var(--farm-accent); color:#fff; }
     #farmCats li.active .cat-count { background:rgba(255,255,255,.25); color:#fff; }
     .cat-count { background:var(--farm-chip); color:var(--farm-muted); font-size:.74rem; font-weight:700; padding:2px 9px; border-radius:999px; min-width:22px; text-align:center; }
+    .farm-sidebar-subhead { font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--farm-muted); padding:14px 10px 6px; margin-top:8px; border-top:1px solid var(--farm-line); }
+    #farmPractices { list-style:none; margin:0; padding:0; }
+    #farmPractices li { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 12px; border-radius:11px; cursor:pointer; font-size:.86rem; font-weight:500; transition:background .12s, color .12s; }
+    #farmPractices li:hover { background:var(--farm-chip); }
+    #farmPractices li.active { background:var(--farm-accent); color:#fff; }
+    #farmPractices li.active .cat-count { background:rgba(255,255,255,.25); color:#fff; }
+    .farm-practices { display:flex; flex-wrap:wrap; gap:5px; }
+    .practice-badge { background:#e8f0e2; color:#3f5638; border:1px solid #cfe0c4; font-size:.72rem; font-weight:600; padding:3px 9px; border-radius:7px; }
+    .practice-badge.ns { background:#f0ece3; color:#8c8270; border-color:#e3dccd; font-weight:500; font-style:italic; }
 
     .farm-stats { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
     .farm-stat { background:var(--farm-card); border:1px solid var(--farm-line); border-radius:14px; padding:10px 16px; }
@@ -286,6 +295,8 @@
       <aside class="farm-sidebar" id="farmSidebar">
         <div class="farm-sidebar-head">Categories <button id="farmSidebarClose" type="button" aria-label="Close">&times;</button></div>
         <ul id="farmCats"></ul>
+        <div class="farm-sidebar-subhead">Growing practices</div>
+        <ul id="farmPractices"></ul>
       </aside>
       <div class="farm-main">
         <div class="farm-trackbar">
@@ -495,6 +506,7 @@ refresh();
    several categories.
    ============================================================ */
 const FARM_CATEGORIES = ["Produce","Fruit & Orchard","Berries","Microgreens","Mushrooms","Grain","Flowers & Herbs","Beef","Pork","Poultry & Eggs","Lamb & Goat","Dairy","Honey & Bees","CSA / Boxes","U-Pick","Agritourism","Organic / Regenerative"];
+const PRACTICE_TAGS = ["Certified Organic","Organic practices","Certified Naturally Grown","Animal Welfare Certified","Regenerative","Permaculture","No-spray / pesticide-free","No synthetic fertilizer","Non-GMO","No-till","Hydroponic / indoor","Conventional","Pasture-raised","Grass-fed","Grass-finished","Grain-finished","Non-GMO feed","Soy-free / corn-free feed","No added hormones","No antibiotics","Not specified"];
 
 const farms = [
   { name:"Basnett Farms", categories:["Microgreens","Flowers & Herbs","Organic / Regenerative"], summary:"USDA Certified Organic family farm specializing in microgreens and edible flowers, sold at the Tulsa Farmers' Market and online.", products:["Microgreens","Pea shoots","Edible flowers","Herbs"], website:"https://basnettfarms.com/", phone:"(918) 880-3276", city:"Tulsa", tags:["microgreens","organic","urban farm"], lat:36.1540, lon:-95.9928, approx:true },
@@ -667,9 +679,107 @@ const FARM_SOCIAL = {
 };
 farms.forEach(f => { const s = FARM_SOCIAL[f.name]; if (s) { if (s.fb && !f.fb) f.fb = s.fb; if (s.ig && !f.ig) f.ig = s.ig; } });
 
+/* ── Growing/raising practices, merged onto farms by name ──
+   Tags use the controlled vocabulary in PRACTICE_TAGS. "Not specified" =
+   the farm doesn't publicly state its methods (not a judgment about them). */
+const FARM_PRACTICES = {
+  "Basnett Farms": ["Certified Organic","No-spray / pesticide-free","Non-GMO","No-till","No synthetic fertilizer"],
+  "Prairie Creek Farms": ["Grass-fed","Grass-finished","Pasture-raised","Non-GMO feed","No added hormones","No antibiotics"],
+  "Robinson Ranch": ["Organic practices","Regenerative","No-spray / pesticide-free","No-till","Pasture-raised","Grass-fed"],
+  "Greenwood Farms": ["Not specified"],
+  "Livesay Orchards": ["Not specified"],
+  "Knight Pecan Farms": ["Not specified"],
+  "Tulsa Farm Lab": ["Regenerative"],
+  "Honey Creek Farm": ["Not specified"],
+  "Living Kitchen Farm & Dairy": ["Organic practices"],
+  "Joe's Farm": ["Organic practices"],
+  "Three Springs Farm": ["Certified Organic","No-spray / pesticide-free","Regenerative","No-till"],
+  "Resilient Growers": ["Regenerative"],
+  "Shepherd's Cross": ["Animal Welfare Certified","Grass-fed","Grass-finished","No added hormones","No-spray / pesticide-free"],
+  "Prairie's End": ["Organic practices","Permaculture"],
+  "The Peach Barn - Orchard & Bakery": ["Not specified"],
+  "Oklahoma Honey": ["Not specified"],
+  "Okie Bee Farms": ["Not specified"],
+  "High On A Hill Dairy Goats": ["Not specified"],
+  "Sloth Acres": ["Pasture-raised"],
+  "The Oklahoma Mushroom Company": ["Hydroponic / indoor"],
+  "The Flower Meadow": ["Not specified"],
+  "Owasso Christmas Tree and Berry Farm": ["Not specified"],
+  "Peace of Prairie": ["Certified Organic","No-spray / pesticide-free","No synthetic fertilizer","Regenerative"],
+  "Outwest Farms": ["Grass-fed","Pasture-raised"],
+  "Grassroots Ranch": ["Grass-fed","Grass-finished","Pasture-raised","Regenerative","No added hormones","No antibiotics"],
+  "Graham Acres": ["Pasture-raised","Regenerative","No-till"],
+  "413 Farm": ["Organic practices","Pasture-raised","Grass-fed","Non-GMO","Non-GMO feed","Soy-free / corn-free feed","Regenerative"],
+  "Harper Farm": ["Pasture-raised","Grass-fed","Grain-finished","Regenerative","No added hormones","No antibiotics"],
+  "Tallgrass Heritage": ["Grass-fed","Grass-finished","Pasture-raised","No added hormones","No antibiotics"],
+  "Swan Bros. Dairy": ["Grass-fed","No added hormones","No-spray / pesticide-free"],
+  "Saltgrass Dairy": ["Grass-fed","Pasture-raised"],
+  "Our Farm": ["Not specified"],
+  "Roark Acres Honey Farms": ["Not specified"],
+  "RJS Bee Farm (Owasso Bee Guy)": ["Not specified"],
+  "Thunderbird Berry Farm": ["Grass-fed"],
+  "Endicott Farms": ["Not specified"],
+  "Fisher's Produce": ["Certified Organic"],
+  "Bootstrap Farm": ["Certified Organic"],
+  "Alchemy Gardens": ["Hydroponic / indoor"],
+  "Fox & Folly Farm": ["Organic practices"],
+  "Coram Deo Flower Farm": ["Not specified"],
+  "Owasso Flower Farm": ["Not specified"],
+  "Thompson Acres": ["Not specified"],
+  "Breisch Garden": ["Not specified"],
+  "Miller Farms": ["Pasture-raised"],
+  "Heaven Sent Food & Fiber": ["Organic practices","Regenerative","Pasture-raised","Grass-fed","No synthetic fertilizer"],
+  "Rare Breed Farms": ["Organic practices","No-spray / pesticide-free","No synthetic fertilizer","Pasture-raised","Grass-fed","Grass-finished"],
+  "Single Loop Ranch": ["Grass-fed","Grass-finished","Pasture-raised","No added hormones","No antibiotics"],
+  "Youngman Family Farm": ["Not specified"],
+  "Baird's Farm": ["Not specified"],
+  "Maple Creek Berry Farm": ["Not specified"],
+  "Hill Farm": ["Organic practices"],
+  "9 West Ranch Beef": ["Grass-fed","Grain-finished","No added hormones","No antibiotics"],
+  "Duchess Creek Farms": ["Grass-fed","Grass-finished","Pasture-raised","No added hormones","No antibiotics"],
+  "EZ Angus Beef": ["Pasture-raised","Grass-fed","Grain-finished","No added hormones","No antibiotics"],
+  "Baileys Home Farm": ["Not specified"],
+  "The Heirloom Acre": ["Organic practices","Regenerative","No-till","No-spray / pesticide-free","No synthetic fertilizer"],
+  "Coats Family Beef": ["Grain-finished","No added hormones","No antibiotics"],
+  "Cultivate Flower Farm": ["Organic practices","No-spray / pesticide-free"],
+  "Yarrowhead Farms": ["Certified Organic","Regenerative"],
+  "Prairie Thyme Farm": ["Organic practices","Pasture-raised","Grass-fed"],
+  "Central Oklahoma Honey": ["Not specified"],
+  "The Snow Family Farm & Hatchery": ["Not specified"],
+  "Akin Acres Family Farm": ["Organic practices","Grass-fed","Pasture-raised"],
+  "Stillwater Creek Farm": ["Pasture-raised","Grass-fed","Grain-finished"],
+  "Dunagan Farms": ["Organic practices","Pasture-raised","Grass-fed","Grain-finished","No added hormones","No antibiotics"],
+  "C&C Farms (Cars and Cows)": ["Pasture-raised"],
+  "Semkin Longhorns": ["Grass-fed","Grass-finished","Pasture-raised","No added hormones","No antibiotics","No-spray / pesticide-free","No synthetic fertilizer"],
+  "Paige Farms Dairy Goats": ["Not specified"],
+  "Morning View Farm": ["Not specified"],
+  "Fairy Goat Mother Farms": ["Not specified"],
+  "N40 Berries": ["Not specified"],
+  "Hoffman Pecan Farm": ["Not specified"],
+  "Persimmon Hill Farm & Bakery": ["Not specified"],
+  "Drummond Ranch (Drummond Beef)": ["Pasture-raised","Grain-finished","Grass-finished"],
+  "Osage County Beef": ["Pasture-raised","Grain-finished"],
+  "Mulberry Cattle Co.": ["Grass-fed","Pasture-raised"],
+  "Crossover Cattle Company": ["Grass-fed","Grass-finished","Pasture-raised"],
+  "American Heritage Family Farm": ["Regenerative","Pasture-raised","Organic practices"],
+  "RLC Farm": ["Organic practices"],
+  "Webber Farms": ["Not specified"],
+  "Sayre Family Farm": ["Organic practices","Non-GMO","Pasture-raised","No added hormones","No antibiotics"],
+  "Bee-Loved Honey": ["Not specified"],
+  "Nature's Comeback Bison Ranch": ["Grass-fed","Grass-finished","No added hormones","No antibiotics","Regenerative"],
+  "Holy Cow Farms": ["Regenerative","Pasture-raised","Grass-fed","Grass-finished","Grain-finished","Non-GMO feed","No added hormones","No antibiotics"],
+  "Chisholm Trail Milling": ["Not specified"],
+  "Creekside Berry Farm": ["Not specified"],
+  "Peach Tree Farms": ["Not specified"],
+  "Real Ranch Grassfed": ["Grass-fed","Grass-finished"],
+  "Pullen Peaches": ["Not specified"]
+};
+farms.forEach(f => { f.practices = FARM_PRACTICES[f.name] || ["Not specified"]; });
+
 /* ── Farm DOM refs ── */
 const farmGrid = document.getElementById('farmGrid');
 const farmCatsEl = document.getElementById('farmCats');
+const farmPracticesEl = document.getElementById('farmPractices');
 const farmSearch = document.getElementById('farmSearch');
 const farmStatsEl = document.getElementById('farmStats');
 const farmEmpty = document.getElementById('farmEmpty');
@@ -678,6 +788,7 @@ const farmScrim = document.getElementById('farmScrim');
 const farmTrackFilter = document.getElementById('farmTrackFilter');
 const trackSummary = document.getElementById('trackSummary');
 let farmActiveCat = 'All Farms';
+let farmActivePractice = 'Any';
 
 /* ── Personal tracking (visited / rating / notes), saved in THIS browser ── */
 const TRACK_KEY = 'tulsaFarmTracking';
@@ -712,11 +823,23 @@ function renderFarmCats(){
   farmCatsEl.innerHTML = items.map(([c, n]) =>
     `<li data-cat="${c}" class="${c === farmActiveCat ? 'active' : ''}">${c}<span class="cat-count">${n}</span></li>`).join('');
 }
+function practiceCounts(){
+  const counts = {}; PRACTICE_TAGS.forEach(p => counts[p] = 0);
+  farms.forEach(f => (f.practices || []).forEach(p => { if (counts[p] != null) counts[p]++; }));
+  return counts;
+}
+function renderFarmPractices(){
+  const counts = practiceCounts();
+  const items = [{ label:'Any practice', val:'Any', n:farms.length }, ...PRACTICE_TAGS.filter(p => counts[p] > 0).map(p => ({ label:p, val:p, n:counts[p] }))];
+  farmPracticesEl.innerHTML = items.map(it =>
+    `<li data-practice="${it.val}" class="${it.val === farmActivePractice ? 'active' : ''}">${it.label}<span class="cat-count">${it.n}</span></li>`).join('');
+}
 function farmFiltered(){
   const q = farmSearch.value.toLowerCase().trim();
   const tf = farmTrackFilter ? farmTrackFilter.value : 'all';
   return farms.filter(f => {
     if (farmActiveCat !== 'All Farms' && !f.categories.includes(farmActiveCat)) return false;
+    if (farmActivePractice !== 'Any' && !(f.practices || []).includes(farmActivePractice)) return false;
     if (tf !== 'all') {
       const t = getTrack(f.name);
       if (tf === 'visited' && !t.visited) return false;
@@ -725,7 +848,7 @@ function farmFiltered(){
       if (tf === 'notes' && !(t.notes && t.notes.trim())) return false;
     }
     if (!q) return true;
-    const blob = `${f.name} ${f.city} ${f.summary || ''} ${(f.products || []).join(' ')} ${(f.tags || []).join(' ')} ${f.categories.join(' ')}`.toLowerCase();
+    const blob = `${f.name} ${f.city} ${f.summary || ''} ${(f.products || []).join(' ')} ${(f.tags || []).join(' ')} ${f.categories.join(' ')} ${(f.practices || []).join(' ')}`.toLowerCase();
     return blob.includes(q);
   });
 }
@@ -745,11 +868,13 @@ function renderFarmCards(list){
     const idx = farms.indexOf(f);
     const tr = getTrack(f.name);
     const stars = [1,2,3,4,5].map(n => `<span class="star ${n <= tr.rating ? 'on' : ''}" data-star="${n}" role="button" aria-label="Rate ${n}">&#9733;</span>`).join('');
+    const practiceBadges = (f.practices && f.practices.length) ? `<div class="farm-practices">${f.practices.map(p => `<span class="practice-badge${p === 'Not specified' ? ' ns' : ''}">${p}</span>`).join('')}</div>` : '';
     return `<article class="farm-card${tr.visited ? ' is-visited' : ''}">
       <div class="farm-cat">${f.categories[0]}</div>
       <h3>${f.name}</h3>
       ${f.summary ? `<p class="farm-summary">${f.summary}</p>` : ''}
       ${prod}
+      ${practiceBadges}
       <div class="farm-meta">${meta.join('')}</div>
       ${tags}
       <div class="farm-links">
@@ -802,6 +927,13 @@ farmCatsEl.addEventListener('click', e => {
   const li = e.target.closest('li'); if (!li) return;
   farmActiveCat = li.dataset.cat;
   renderFarmCats();
+  refreshFarms();
+  closeFarmDrawer();
+});
+farmPracticesEl.addEventListener('click', e => {
+  const li = e.target.closest('li'); if (!li) return;
+  farmActivePractice = li.dataset.practice;
+  renderFarmPractices();
   refreshFarms();
   closeFarmDrawer();
 });
@@ -863,6 +995,7 @@ trackImportFile.addEventListener('change', () => {
 });
 
 renderFarmCats();
+renderFarmPractices();
 refreshFarms();
 recomputeTrackSummary();
 
